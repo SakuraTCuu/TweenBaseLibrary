@@ -1,0 +1,8 @@
+{
+  "engine": "cocos2d-html5",
+  "packages": "packages",
+  "version": "2.4.3",
+  "name": "TweenBaseLibrary",
+  "id": "4c9eefbb-fc0f-404b-a701-629566ee8816",
+  "isNew": false
+}
