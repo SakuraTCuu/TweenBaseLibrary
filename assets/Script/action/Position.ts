@@ -18,6 +18,13 @@ export default class Position extends BaseNode {
 
     onLoad() {
         this._tweenType = TweenType.POSITION;
+
+        this.LineTo.on(cc.Node.EventType.TOUCH_START, this.touchLineStart, this)
+        this.LineTo.on(cc.Node.EventType.TOUCH_MOVE, this.touchLineMove, this);
+        this.LineTo.on(cc.Node.EventType.TOUCH_END, this.touchLineEnd, this);
+        this.LineTo.on(cc.Node.EventType.TOUCH_CANCEL, this.touchLineEnd, this)
+
+        this.initEvent();
     }
 
     onChangeEnd(event, data) {
