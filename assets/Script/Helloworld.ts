@@ -6,8 +6,35 @@ export default class Helloworld extends cc.Component {
     @property(cc.Node)
     MainNode: cc.Node = null;
 
-    onLoad() {
+    @property(cc.Node)
+    ContentNode: cc.Node = null;
 
+    @property(cc.Prefab)
+    PositionPre: cc.Prefab = null;
+
+    globalTween = {};
+
+    onLoad() {
+        this.initView();
+        this.initEvent();
+    }
+
+    initView() {
+        let item = cc.instantiate(this.PositionPre);
+        item.parent = this.ContentNode;
+    }
+
+    initEvent() {
+        this.ContentNode.on("position", (event: cc.Event.EventCustom) => {
+            cc.log(event);
+            let tween = event.getUserData().tween;
+            // this.globalTween['position'] = tween;
+            this.tweenFactory(tween);
+        }, this)
+    }
+
+    tweenFactory(tween) {
+        tween.target(this.MainNode).start();
     }
 
     startTween() {

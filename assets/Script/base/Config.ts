@@ -1,14 +1,30 @@
-/**缓动类型 */
-interface easingType {
 
+/**缓动类型 */
+export enum EasingType {
+    NULL,
+    //...
+}
+
+export enum TweenFlag {
+    TO,
+    BY,
 }
 
 /**动画类型 */
-interface TweenType {
-
+export enum TweenType {
+    NORMAL,
+    POSITION,
+    OPACITY,
+    SCALE,
+    ANGLE,
+    CALL,
+    DELAY,
+    SEQUENCE,
+    REPEAT
+    // ...
 }
 
 /**引脚线条类型 */
-interface LineType {
+export enum LineType {
 
 }
