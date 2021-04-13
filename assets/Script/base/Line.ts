@@ -103,8 +103,6 @@ export default class Line extends cc.Component {
         let disX = endPos.x - startPos.x;
         let disY = endPos.y - startPos.y;
 
-        this.Graphics.moveTo(startPos.x, startPos.y);
-
         let curveX1 = startPos.x + disX * 0.7;
         let curveY1 = startPos.y + disY * 0.125;
         let curveX2 = startPos.x + disX * 0.3;

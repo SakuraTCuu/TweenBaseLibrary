@@ -16,6 +16,7 @@ export enum TweenType {
     POSITION,
     OPACITY,
     SCALE,
+    START,
     ANGLE,
     CALL,
     DELAY,
