@@ -56,6 +56,7 @@ export default class BaseNode extends cc.Component {
     }
 
     touchMove(event: cc.Event.EventTouch) {
+        event.stopPropagation();
         let x = event.getDeltaX();
         let y = event.getDeltaY();
         this.node.x += x;
@@ -64,6 +65,7 @@ export default class BaseNode extends cc.Component {
     }
 
     touchEnd() {
+        event.stopPropagation();
         this.sendPosition();
     }
 

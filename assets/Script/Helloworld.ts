@@ -6,7 +6,13 @@ const { ccclass, property } = cc._decorator;
 export default class Helloworld extends cc.Component {
 
     @property(cc.Node)
+    Background: cc.Node = null;
+
+    @property(cc.Node)
     MainNode: cc.Node = null;
+
+    @property(cc.Node)
+    ContentNode: cc.Node = null;
 
     @property(cc.Prefab)
     PositionPre: cc.Prefab = null;
@@ -29,10 +35,13 @@ export default class Helloworld extends cc.Component {
     }
 
     initView() {
+        /**创建矢量幕布 */
+        this.Background
         this.addEvent(this.MainNode);
     }
 
     initEvent() {
+        this.ContentNode.on(cc.Node.EventType.TOUCH_MOVE, this.touchMove, this);
         this.node.on(cc.Node.EventType.MOUSE_UP, this.onMouseUp, this);
 
         this.node.on("LineCreate", this.createLine, this);
@@ -51,17 +60,17 @@ export default class Helloworld extends cc.Component {
         for (let i = 0; i < this.bindInfo.length; i++) {
             const info = this.bindInfo[i];
             if (info.uuid_to === uuid) {
-                let pos1 = this.node.convertToNodeSpaceAR(toPos);
+                let pos1 = this.ContentNode.convertToNodeSpaceAR(toPos);
                 let pos2 = this.toFromInfo[info.uuid_from].fromPos; //获取另一个点的位置并更新
-                pos2 = this.node.convertToNodeSpaceAR(pos2);
+                pos2 = this.ContentNode.convertToNodeSpaceAR(pos2);
                 this.LineNode.getComponent(Line).touchStart(pos1);
                 this.LineNode.getComponent(Line).touchEnd(true, pos2);
             }
 
             if (info.uuid_from === uuid) {
                 let pos3 = this.toFromInfo[info.uuid_to].toPos;
-                pos3 = this.node.convertToNodeSpaceAR(pos3);
-                let pos4 = this.node.convertToNodeSpaceAR(fromPos);
+                pos3 = this.ContentNode.convertToNodeSpaceAR(pos3);
+                let pos4 = this.ContentNode.convertToNodeSpaceAR(fromPos);
                 this.LineNode.getComponent(Line).touchStart(pos3);
                 this.LineNode.getComponent(Line).touchEnd(true, pos4);
             }
@@ -71,15 +80,15 @@ export default class Helloworld extends cc.Component {
     /**创建线条 */
     createLine(e) {
         let { uuid, pos } = e.getUserData();
-        pos = this.node.convertToNodeSpaceAR(pos);
+        pos = this.ContentNode.convertToNodeSpaceAR(pos);
         this.LineNode = cc.instantiate(this.LinePrefab);
         this.LineNode.getComponent(Line).touchStart(pos);
-        this.LineNode.parent = this.node;
+        this.LineNode.parent = this.ContentNode;
     }
 
     moveLine(e) {
         let { uuid, pos } = e.getUserData();
-        pos = this.node.convertToNodeSpaceAR(pos);
+        pos = this.ContentNode.convertToNodeSpaceAR(pos);
         this.LineNode.getComponent(Line).touchMove(pos);
     }
 
@@ -88,7 +97,7 @@ export default class Helloworld extends cc.Component {
         //判断是否在某个区域内
         let { flag, tarPos } = this.isContains(uuid, pos);
         if (flag) {
-            tarPos = this.node.convertToNodeSpaceAR(tarPos);
+            tarPos = this.ContentNode.convertToNodeSpaceAR(tarPos);
         }
         this.LineNode.getComponent(Line).touchEnd(flag, tarPos);
         hook_cb & hook_cb(flag);
@@ -116,14 +125,48 @@ export default class Helloworld extends cc.Component {
     }
 
     onMouseUp(event) {
+        event.stopPropagation();
         if (event.getButton() === cc.Event.EventMouse.BUTTON_RIGHT) {
             let pos = event.getLocation();
-            pos = this.node.convertToNodeSpaceAR(pos);
+            pos = this.ContentNode.convertToNodeSpaceAR(pos);
             //展示列表
             let item = cc.instantiate(this.PositionPre);;
             item.position = pos
-            item.parent = this.node;
+            item.parent = this.ContentNode;
             this.addEvent(item);
+        }
+    }
+
+    touchMove(event: cc.Event.EventTouch) {
+        event.stopPropagation();
+        let x = event.getDeltaX();
+        let y = event.getDeltaY();
+        this.updateToFromPos(x, y);
+        this.ContentNode.x += x;
+        this.ContentNode.y += y;
+        if (this.ContentNode.x > 4000) {
+            this.ContentNode.x = 4000;
+        }
+        if (this.ContentNode.x < -4000) {
+            this.ContentNode.x = -4000;
+        }
+        if (this.ContentNode.y > 4000) {
+            this.ContentNode.y = 4000;
+        }
+        if (this.ContentNode.y < -4000) {
+            this.ContentNode.y = -4000;
+        }
+    }
+
+    /**背景位置变动后,更新所有世界坐标 */
+    updateToFromPos(x, y) {
+        let keys = Object.keys(this.toFromInfo);
+        for (const key in keys) {
+            if (Object.prototype.hasOwnProperty.call(this.toFromInfo, keys[key])) {
+                let info = this.toFromInfo[keys[key]];
+                info.toPos.addSelf(cc.v2(x, y));
+                info.fromPos.addSelf(cc.v2(x, y));
+            }
         }
     }
 

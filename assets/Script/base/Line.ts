@@ -16,10 +16,19 @@ export default class Line extends cc.Component {
     c4: cc.Vec2 = null;
 
     onLoad() {
+        // this.test();
         // this.node.on(cc.Node.EventType.TOUCH_START, this.touchStart, this)
         // this.node.on(cc.Node.EventType.TOUCH_MOVE, this.touchMove, this);
         // this.node.on(cc.Node.EventType.TOUCH_END, this.touchEnd, this);
         // this.node.on(cc.Node.EventType.TOUCH_CANCEL, this.touchEnd, this)
+    }
+
+    test() {
+        this.c1 = cc.v2(cc.v2(100, 100));
+        this.c2 = cc.v2(500, 100);
+        this.c3 = cc.v2(-500, -100);
+        this.c4 = cc.v2(-100, -100);
+        this.drawLine();
     }
 
     // touchStart(event: cc.Event.EventTouch) {
@@ -81,7 +90,6 @@ export default class Line extends cc.Component {
         // this.Graphics.circle(this.startPoint.x, this.startPoint.y, 10);
         // this.Graphics.circle(pos.x, pos.y, 10);
         // this.Graphics.stroke();
-
         /**绘制动态球 */
         this.runCircle(0.5);
     }
@@ -95,23 +103,29 @@ export default class Line extends cc.Component {
         let disX = endPos.x - startPos.x;
         let disY = endPos.y - startPos.y;
 
-        let midX = disX / 2;
-        let midY = disY / 2;
         this.Graphics.moveTo(startPos.x, startPos.y);
 
-        let curveX1 = startPos.x + midX * 0.85;
-        let curveY1 = startPos.y + midY * 0.125;
-        let midPosx = startPos.x + midX;
-        let midPosy = startPos.y + midY;
-        let curveX2 = startPos.x + midX * 1.15;
-        let curveY2 = startPos.y + midY * 1.875;
+        let curveX1 = startPos.x + disX * 0.7;
+        let curveY1 = startPos.y + disY * 0.125;
+        let curveX2 = startPos.x + disX * 0.3;
+        let curveY2 = startPos.y + disY * 0.875;
+        if (disX < 0) {
+            curveX1 = startPos.x + Math.abs(disX) * 2;
+            curveY1 = startPos.y + disY * 0.5;
+            curveX2 = startPos.x - Math.abs(disX) * 3;
+            curveY2 = endPos.y - disY * 0.5;
+        }
 
         this.c1 = cc.v2(startPos);
         this.c2 = cc.v2(curveX1, curveY1);
         this.c3 = cc.v2(curveX2, curveY2);
         this.c4 = cc.v2(endPos);
 
-        this.Graphics.moveTo(startPos.x, startPos.y);
+        this.drawLine();
+    }
+
+    drawLine() {
+        this.Graphics.moveTo(this.c1.x, this.c1.y);
         let t = 0;
         for (let i = 0; i < 59; i++) {
             t += 0.017;
