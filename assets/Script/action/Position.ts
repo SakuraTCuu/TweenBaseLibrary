@@ -7,6 +7,9 @@ const { ccclass, property } = cc._decorator;
 export default class Position extends BaseNode {
 
     @property(cc.EditBox)
+    tEdit: cc.EditBox = null;
+
+    @property(cc.EditBox)
     xEdit: cc.EditBox = null;
 
     @property(cc.EditBox)
@@ -19,6 +22,9 @@ export default class Position extends BaseNode {
     onLoad() {
         this._tweenType = TweenType.POSITION;
 
+        this.tEdit.string = this.time + "";
+        this.xEdit.string = this.x + "";
+        this.yEdit.string = this.y + "";
         this.initEvent();
     }
 

@@ -52,7 +52,7 @@ export default class Helloworld extends cc.Component {
     initEvent() {
         this.ContentNode.on(cc.Node.EventType.TOUCH_MOVE, this.touchMove, this);
         this.ContentNode.on(cc.Node.EventType.MOUSE_DOWN, this.onMouseDown, this);
-        this.ContentNode.on(cc.Node.EventType.MOUSE_WHEEL, this.onMouseWheel, this);
+        // this.ContentNode.on(cc.Node.EventType.MOUSE_WHEEL, this.onMouseWheel, this);
         this.ContentNode.on(cc.Node.EventType.MOUSE_UP, this.onMouseUp, this);
 
         this.node.on("LineCreate", this.createLine, this);
@@ -173,6 +173,21 @@ export default class Helloworld extends cc.Component {
         }
     }
 
+
+    addZoomRatio() {
+        this.MainCamera.zoomRatio += 0.02;
+        if (this.MainCamera.zoomRatio > 1.5) {
+            this.MainCamera.zoomRatio = 1.5;
+        }
+    }
+
+    subZoomRatio() {
+        this.MainCamera.zoomRatio -= 0.02;
+        if (this.MainCamera.zoomRatio < 0.5) {
+            this.MainCamera.zoomRatio = 0.5
+        }
+    }
+
     onMouseWheel(event) {
         let y = event.getScrollY();
         if (y > 0) {
@@ -254,8 +269,12 @@ export default class Helloworld extends cc.Component {
         for (const key in keys) {
             if (Object.prototype.hasOwnProperty.call(this.toFromInfo, keys[key])) {
                 let info = this.toFromInfo[keys[key]];
-                info.toPos.addSelf(cc.v2(x, y));
-                info.fromPos.addSelf(cc.v2(x, y));
+                if (info.toPos) {
+                    info.toPos.addSelf(cc.v2(x, y));
+                }
+                if (info.fromPos) {
+                    info.fromPos.addSelf(cc.v2(x, y));
+                }
             }
         }
     }
