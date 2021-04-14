@@ -30,13 +30,16 @@ export default class Helloworld extends cc.Component {
     zIndex = 0;
 
     LineNodeListInfo = {};
-    toList: Array<cc.Vec2> = [];
-    fromList: Array<cc.Vec2> = [];
-
     touchType: boolean = true;
 
     toFromInfo = {};
-    bindInfo = []
+    /**
+     * {
+        uuid, toPos, fromPos
+       }
+     */
+    bindInfo = [];
+
     NodeList = {};
 
     onLoad() {
@@ -44,16 +47,26 @@ export default class Helloworld extends cc.Component {
         this.initEvent();
     }
 
-    initView() {
-        /**创建矢量幕布 */
-        this.addEvent(this.MainNode);
-
+    start() {
         let item = cc.instantiate(this.StartPre);
         item.position = cc.v3(200, 100);
         item.parent = this.ContentNode;
         let uuid = item.getComponent(BaseNode).getUuid();
         this.NodeList[uuid] = item;
         this.addEvent(item);
+    }
+
+    initView() {
+
+        this.ContentNode.setContentSize(10000, 10000);
+        /**创建矢量幕布 */
+        // this.addEvent(this.MainNode);
+
+        // this.scheduleOnce(() => {
+        //     let t = cc.tween().to(2, { x: 400 });
+        //     let t1 = cc.tween().to(2, { x: 0 });
+        //     t.then(t1).target(this.MainNode).start();
+        // }, 2);
     }
 
     initEvent() {
@@ -74,8 +87,65 @@ export default class Helloworld extends cc.Component {
 
     /**解除绑定 */
     unBindLine(e) {
-          //目标节点的uuid, 
-          let { tarUuid, tweenData } = e.getUserData();
+        //目标节点的uuid, 
+        let { uuid, from_uuid, pos } = e.getUserData();
+        //判断是否在某个区域内
+        let { flag, type, tarPos, tarUuid } = this.isContains(from_uuid, pos);
+
+        if (flag) {
+            if (from_uuid === tarUuid) {//无需变化
+                return;
+            }
+            //解绑 from_uuid
+            this.NodeList[uuid].getComponent(BaseNode).unBindFromUuid();
+            let uuid_to;
+            //更新bindInfo
+            this.bindInfo.forEach((item) => {
+                if (item.uuid_from == uuid) {
+                    uuid_to = item.uuid_to;
+                    item.uuid_from = tarUuid;
+                }
+            })
+            tarPos = this.ContentNode.convertToNodeSpaceAR(tarPos);
+            /**更新线段 */
+            this.LineNodeListInfo[from_uuid].getComponent(Line).touchEnd(flag, tarPos);
+            /**绑定到同一个*/
+            /**重新绑定新的 */
+            this.NodeList[uuid_to].getComponent(BaseNode).bindToUuid(tarUuid);
+            this.NodeList[tarUuid].getComponent(BaseNode).bindFromUuid(uuid_to);
+        } else {
+            if (type) {
+                tarPos = this.toFromInfo[uuid].fromPos;
+                tarPos = this.ContentNode.convertToNodeSpaceAR(tarPos);
+                //返回原位置
+                this.LineNodeListInfo[from_uuid].getComponent(Line).touchEnd(1, tarPos);
+            } else {
+                this.unBindAll(uuid, null);
+            }
+        }
+    }
+
+    unBindAll(uuid, tarUuid) {
+        cc.log('unbind')
+        let arr = [];
+        this.bindInfo.forEach((item) => {
+            if (item.uuid_from !== uuid) {
+                arr.push(item);
+            } else {
+                tarUuid = item.uuid_to;
+                cc.log("移除一个")
+            }
+        })
+        this.bindInfo = arr;
+
+        //解绑
+        this.NodeList[uuid].getComponent(BaseNode).unBindFromUuid();
+        this.NodeList[tarUuid].getComponent(BaseNode).unBindToUuid();
+
+        this.LineNodeListInfo[uuid].getComponent(Line).clear();
+        this.LineNodeListInfo[uuid] = null;
+
+        delete this.LineNodeListInfo[uuid];
     }
 
     receiveTweenData(e) {
@@ -93,9 +163,11 @@ export default class Helloworld extends cc.Component {
     tweenStart(e) {
         let { tarUuid, tweenData } = e.getUserData();
         tweenData = tweenData as cc.Tween;
-        cc.log(tweenData);
         tweenData
             .target(this.MainNode)
+            .call(() => {
+                this.MainNode.position = cc.v3();
+            })
             .start();
         // cc.log("run")
         // cc.tween()
@@ -148,21 +220,29 @@ export default class Helloworld extends cc.Component {
     }
 
     endLine(e) {
-        let { uuid, pos, hook_cb } = e.getUserData();
+        let { uuid, pos } = e.getUserData();
         //判断是否在某个区域内
         let { flag, tarPos, tarUuid } = this.isContains(uuid, pos);
         if (flag) {
             tarPos = this.ContentNode.convertToNodeSpaceAR(tarPos);
+            /**更新线段 */
+            this.LineNodeListInfo[uuid].getComponent(Line).touchEnd(flag, tarPos);
+            /**绑定到同一个*/
+            /**更新节点 */
+            this.NodeList[uuid].getComponent(BaseNode).bindToUuid(tarUuid);
+            this.NodeList[tarUuid].getComponent(BaseNode).bindFromUuid(uuid);
+        } else {
+            this.LineNodeListInfo[uuid].getComponent(Line).clear();
+            this.LineNodeListInfo[uuid] = null;
+            delete this.LineNodeListInfo[uuid];
         }
-        this.LineNodeListInfo[uuid].getComponent(Line).touchEnd(flag, tarPos);
-        hook_cb & hook_cb(flag, tarUuid);
-
-        //TODO 
-        this.toFromInfo[tarUuid].getComponent(Line).bindUuid(uuid);
     }
 
     isContains(uuid: string, pos: cc.Vec2) {
         let keys = Object.keys(this.toFromInfo);
+
+        let type;
+
         for (const key in keys) {
             if (Object.prototype.hasOwnProperty.call(this.toFromInfo, keys[key])) {
                 const info = this.toFromInfo[keys[key]];
@@ -171,15 +251,25 @@ export default class Helloworld extends cc.Component {
                 };
                 let rect = cc.rect(info.fromPos.x - 10, info.fromPos.y - 10, 20, 20);
                 if (rect.contains(pos)) {
-                    this.bindInfo.push({
-                        uuid_to: uuid,
-                        uuid_from: info.uuid,
-                    });
-                    return { flag: true, tarPos: info.fromPos, tarUuid: info.uuid };
+                    //判断是否已经存在了
+                    let flag;
+                    this.bindInfo.forEach((item) => {
+                        if (item.uuid_from === info.uuid) {
+                            flag = true;
+                            type = 'repeat';
+                        }
+                    })
+                    if (!flag) {
+                        this.bindInfo.push({
+                            uuid_to: uuid,
+                            uuid_from: info.uuid,
+                        });
+                        return { flag: true, tarPos: info.fromPos, tarUuid: info.uuid };
+                    }
                 }
             }
         }
-        return { flag: false };
+        return { flag: false, type };
     }
 
     onMouseDown(event) {

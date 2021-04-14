@@ -20,8 +20,8 @@ export enum TweenType {
     ANGLE,
     CALL,
     DELAY,
-    SEQUENCE,
-    REPEAT
+    REPEAT,
+    REPEATFOREVER,
     // ...
 }
 

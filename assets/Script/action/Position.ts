@@ -15,9 +15,11 @@ export default class Position extends BaseNode {
     @property(cc.EditBox)
     yEdit: cc.EditBox = null;
 
-    time: number = 0.5;
-    x: number = 200;
-    y: number = 200;
+    time: number = 1;
+    x: number = 50;
+    y: number = 0;
+
+    _receiveTween = null;
 
     onLoad() {
         this._tweenType = TweenType.POSITION;
@@ -41,15 +43,12 @@ export default class Position extends BaseNode {
                 break;
         }
 
-        if (this.x && this.y && this.time) {
-            this.sendTweenData(0);
-        }
+        this.sendTweenData(0);
     }
 
     /**怎么返回tween? */
-    returnData() {
+    returnData(type) {
         let tween = cc.tween();
-        cc.log(this.x, this.y, this.time);
         if (this._tweenFlag === TweenFlag.TO) {
             tween.to(this.time, {
                 position: cc.v2(this.x, this.y)
@@ -59,10 +58,22 @@ export default class Position extends BaseNode {
                 position: cc.v2(this.x, this.y)
             })
         }
+
+        tween['_uuid'] = this._uuid;
+
+        if (this._receiveTween) {
+            return this._receiveTween.then(tween);
+        }
         return tween;
     }
 
-    solveData(tweenData) {
-        cc.log("tweenData-->", tweenData)
+    solveData(tweenData: cc.Tween) {
+        this._receiveTween = tweenData.clone();
+        let curTween = this.returnData(1);
+        this.sendTweenData(0, 'tweenData', curTween);
+    }
+
+    unBindTween() {
+        this._receiveTween = null;
     }
 }

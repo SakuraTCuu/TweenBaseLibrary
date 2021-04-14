@@ -15,6 +15,9 @@ export default class BaseNode extends cc.Component {
     @property(cc.Node)
     LineTo: cc.Node = null;
 
+    @property(cc.Label)
+    UuidLabel: cc.Label = null;
+
     protected _tweenType: TweenType = TweenType.NORMAL;/**type类型，用于标识是何种类型 */
     public get type() {
         return this._tweenType;
@@ -31,7 +34,7 @@ export default class BaseNode extends cc.Component {
         this._easingType = value;
     }
 
-    protected _tweenFlag: TweenFlag = TweenFlag.TO; /** tween 标志 */
+    protected _tweenFlag: TweenFlag = TweenFlag.BY; /** tween 标志 */
     public get tweenFlag(): TweenFlag {
         return this._tweenFlag;
     }
@@ -41,7 +44,8 @@ export default class BaseNode extends cc.Component {
 
     protected _isBind: boolean = true;
     protected _uuid: string = Date.now() + "";//随机生成uuid 作为唯一标识 TODO Temp
-    protected _tarUuid: string = "";
+    protected _toUuid: string = "";  //右边节点  to
+    protected _fromUuid: string = ""; //左边节点 接收
 
     onLoad() {
     }
@@ -50,10 +54,31 @@ export default class BaseNode extends cc.Component {
         return this._uuid;
     }
 
+    bindFromUuid(uuid) {
+        this._fromUuid = uuid;
+        this.registerEvent();
+    }
+
+    unBindFromUuid() {
+        this._fromUuid = "";
+        this.unBindTween();
+        this.unRegisterEvent();
+    }
+
+    bindToUuid(uuid) {
+        this._toUuid = uuid;
+        this.sendTweenData(0);
+    }
+
+    unBindToUuid() {
+        this._toUuid = "";
+    }
+
     /**每一个继承自此基类的组件都向main派发事件
      * 当节点移动时,触发时间
      */
     initEvent() {
+        this.UuidLabel.string = this._uuid;
         this.node.on(cc.Node.EventType.TOUCH_MOVE, this.touchMove, this)
         this.node.on(cc.Node.EventType.TOUCH_END, this.touchEnd, this)
 
@@ -68,23 +93,20 @@ export default class BaseNode extends cc.Component {
 
     touchLineFromStart(e: cc.Event.EventTouch) {
         e.stopPropagation();
-        if (!this._tarUuid) {
+        if (!this._fromUuid) {
             return;
         }
     }
 
     touchLineFromMove(e: cc.Event.EventTouch) {
         e.stopPropagation();
-        if (!this._tarUuid) {
+        if (!this._fromUuid) {
             return;
         }
         let pos = e.getLocation();
-        // pos = this.node.convertToNodeSpaceAR(pos);
-        // pos = this.node.convertToWorldSpaceAR(pos);
-        /**/
         let event = new cc.Event.EventCustom("LineMove", true);
         event.detail = {
-            uuid: this._uuid,
+            uuid: this._fromUuid,
             pos: pos
         }
         this.node.dispatchEvent(event)
@@ -92,9 +114,10 @@ export default class BaseNode extends cc.Component {
 
     touchLineFromEnd(e: cc.Event.EventTouch) {
         e.stopPropagation();
-        if (!this._tarUuid) {
+        if (!this._fromUuid) {
             return;
         }
+
         let pos = e.getLocation();
 
         /**判断是否有接触目标区域 */
@@ -102,14 +125,8 @@ export default class BaseNode extends cc.Component {
 
         event.detail = {
             uuid: this._uuid,
-            pos: pos,
-            hook_cb: (flag) => {
-                if (flag) {
-                    //解绑
-                    this._isBind = false;
-                    this._tarUuid = "";
-                }
-            }
+            from_uuid: this._fromUuid,
+            pos,
         }
         this.node.dispatchEvent(event)
     }
@@ -120,6 +137,15 @@ export default class BaseNode extends cc.Component {
             this.LineFrom.on(cc.Node.EventType.TOUCH_MOVE, this.touchLineFromMove, this);
             this.LineFrom.on(cc.Node.EventType.TOUCH_END, this.touchLineFromEnd, this);
             this.LineFrom.on(cc.Node.EventType.TOUCH_CANCEL, this.touchLineFromEnd, this);
+        }
+    }
+
+    unRegisterEvent() {
+        if (this.LineFrom) {
+            this.LineFrom.off(cc.Node.EventType.TOUCH_START, this.touchLineFromStart, this)
+            this.LineFrom.off(cc.Node.EventType.TOUCH_MOVE, this.touchLineFromMove, this);
+            this.LineFrom.off(cc.Node.EventType.TOUCH_END, this.touchLineFromEnd, this);
+            this.LineFrom.off(cc.Node.EventType.TOUCH_CANCEL, this.touchLineFromEnd, this);
         }
     }
 
@@ -157,10 +183,11 @@ export default class BaseNode extends cc.Component {
         this.node.dispatchEvent(event)
     }
 
+    /**=================================曲线线条事件============================================== */
     /**由子节点触发事件 */
     touchLineStart(e: cc.Event.EventTouch) {
         e.stopPropagation();
-        if (this._tarUuid) {
+        if (this._toUuid) {
             return;
         }
         let pos = this.node.convertToWorldSpaceAR(this.LineTo.position);
@@ -176,7 +203,7 @@ export default class BaseNode extends cc.Component {
     /**由子节点触发事件 */
     touchLineMove(e: cc.Event.EventTouch) {
         e.stopPropagation();
-        if (this._tarUuid) {
+        if (this._toUuid) {
             return;
         }
         let pos = e.getLocation();
@@ -197,11 +224,9 @@ export default class BaseNode extends cc.Component {
     touchLineEnd(e) {
         e.stopPropagation();
         let pos = e.getLocation();
-        if (this._tarUuid) {
+        if (this._toUuid) {
             return;
         }
-        // pos.x /= cc.Camera.main.zoomRatio;
-        // pos.y /= cc.Camera.main.zoomRatio;
 
         /**判断是否有接触目标区域 */
         let event = new cc.Event.EventCustom("LineEnd", true);
@@ -209,22 +234,8 @@ export default class BaseNode extends cc.Component {
         event.detail = {
             uuid: this._uuid,
             pos: pos,
-            hook_cb: (flag, tarUuid) => {//回调函数  用来处理链接后,绑定两BaseNode
-                if (flag) {
-                    //绑定成功
-                    this._isBind = true;
-                    // 给tarUuid传递tween
-                    this._tarUuid = tarUuid;
-                    this.sendTweenData(0);
-                }
-            }
         }
         this.node.dispatchEvent(event)
-    }
-
-    bindUuid(uuid) {
-        this._tarUuid = uuid;
-        this.registerEvent();
     }
 
     receiveData(tweenData) {
@@ -233,31 +244,25 @@ export default class BaseNode extends cc.Component {
 
     sendTweenData(isCustom, targetName?, tweenData?) {
         targetName = targetName || "tweenData";
-        tweenData = tweenData || this.returnData();
+        tweenData = tweenData || this.returnData(0);
 
         if (!isCustom) {
-            if (!this._tarUuid) {
+            if (!this._toUuid) {
                 return;
             }
-            // if (!isCustom || !this._tarUuid) {
-            //     return;
-            // }
         }
 
         let tweenEvent = new cc.Event.EventCustom(targetName, true);
         tweenEvent.detail = {
-            tarUuid: this._tarUuid,
+            tarUuid: this._toUuid,
             tweenData
         };
         this.node.dispatchEvent(tweenEvent)
     }
 
     /**子类实现 */
-    solveData(tweenData) {
-
-    }
-    returnData() {
-
-    }
+    solveData(tweenData) { }
+    returnData(type) { }
+    unBindTween() { }
 
 }

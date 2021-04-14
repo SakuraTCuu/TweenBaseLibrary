@@ -63,6 +63,11 @@ export default class Line extends cc.Component {
     //     this.runCircle(0.5);
     // }
 
+    clear() {
+        this.Graphics.clear(true);
+        this.Graphics2.clear(true);
+        this.unscheduleAllCallbacks();
+    }
     touchStart(pos) {
         // // let pos = event.getLocation();
         // pos = this.node.convertToNodeSpaceAR(pos);
@@ -76,6 +81,8 @@ export default class Line extends cc.Component {
         this.Graphics.clear();
         // let pos = event.getLocation();
         // pos = this.node.convertToNodeSpaceAR(pos);
+        this.unscheduleAllCallbacks();
+        this.Graphics2.clear();
         this.drawBezier(pos, this.startPoint);
     }
 
