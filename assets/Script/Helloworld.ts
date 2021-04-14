@@ -47,6 +47,13 @@ export default class Helloworld extends cc.Component {
     initView() {
         /**创建矢量幕布 */
         this.addEvent(this.MainNode);
+
+        let item = cc.instantiate(this.StartPre);
+        item.position = cc.v3(200, 100);
+        item.parent = this.ContentNode;
+        let uuid = item.getComponent(BaseNode).getUuid();
+        this.NodeList[uuid] = item;
+        this.addEvent(item);
     }
 
     initEvent() {
@@ -59,10 +66,16 @@ export default class Helloworld extends cc.Component {
         this.node.on("LineMove", this.moveLine, this);
         this.node.on("LineEnd", this.endLine, this);
         this.node.on("toFromInfo", this.toFromLogic, this);
+        this.node.on("LineUnbind", this.unBindLine, this);
 
         this.node.on("tweenData", this.receiveTweenData, this);
         this.node.on("tweenStart", this.tweenStart, this);
+    }
 
+    /**解除绑定 */
+    unBindLine(e) {
+          //目标节点的uuid, 
+          let { tarUuid, tweenData } = e.getUserData();
     }
 
     receiveTweenData(e) {
@@ -143,6 +156,9 @@ export default class Helloworld extends cc.Component {
         }
         this.LineNodeListInfo[uuid].getComponent(Line).touchEnd(flag, tarPos);
         hook_cb & hook_cb(flag, tarUuid);
+
+        //TODO 
+        this.toFromInfo[tarUuid].getComponent(Line).bindUuid(uuid);
     }
 
     isContains(uuid: string, pos: cc.Vec2) {
@@ -205,21 +221,12 @@ export default class Helloworld extends cc.Component {
         cc.log(this.MainCamera.zoomRatio);
     }
 
-    index = 0;
     onMouseUp(event) {
         event.stopPropagation();
         if (this.touchType && event.getButton() === cc.Event.EventMouse.BUTTON_RIGHT) {
             let pos = event.getLocation();
             pos = this.ContentNode.convertToNodeSpaceAR(pos);
-            //展示列表
-            this.index++;
-            let prefab;
-            if (this.index % 2 === 0) {
-                prefab = this.PositionPre;
-            } else {
-                prefab = this.StartPre;
-            }
-            let item = cc.instantiate(prefab);
+            let item = cc.instantiate(this.PositionPre);
             item.position = pos;
             item.parent = this.ContentNode;
             let uuid = item.getComponent(BaseNode).getUuid();

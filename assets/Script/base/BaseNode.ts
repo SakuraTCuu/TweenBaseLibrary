@@ -63,8 +63,64 @@ export default class BaseNode extends cc.Component {
             this.LineTo.on(cc.Node.EventType.TOUCH_END, this.touchLineEnd, this);
             this.LineTo.on(cc.Node.EventType.TOUCH_CANCEL, this.touchLineEnd, this);
         }
-
         this.sendPosition();
+    }
+
+    touchLineFromStart(e: cc.Event.EventTouch) {
+        e.stopPropagation();
+        if (!this._tarUuid) {
+            return;
+        }
+    }
+
+    touchLineFromMove(e: cc.Event.EventTouch) {
+        e.stopPropagation();
+        if (!this._tarUuid) {
+            return;
+        }
+        let pos = e.getLocation();
+        // pos = this.node.convertToNodeSpaceAR(pos);
+        // pos = this.node.convertToWorldSpaceAR(pos);
+        /**/
+        let event = new cc.Event.EventCustom("LineMove", true);
+        event.detail = {
+            uuid: this._uuid,
+            pos: pos
+        }
+        this.node.dispatchEvent(event)
+    }
+
+    touchLineFromEnd(e: cc.Event.EventTouch) {
+        e.stopPropagation();
+        if (!this._tarUuid) {
+            return;
+        }
+        let pos = e.getLocation();
+
+        /**判断是否有接触目标区域 */
+        let event = new cc.Event.EventCustom("LineUnbind", true);
+
+        event.detail = {
+            uuid: this._uuid,
+            pos: pos,
+            hook_cb: (flag) => {
+                if (flag) {
+                    //解绑
+                    this._isBind = false;
+                    this._tarUuid = "";
+                }
+            }
+        }
+        this.node.dispatchEvent(event)
+    }
+
+    registerEvent() {
+        if (this.LineFrom) {
+            this.LineFrom.on(cc.Node.EventType.TOUCH_START, this.touchLineFromStart, this)
+            this.LineFrom.on(cc.Node.EventType.TOUCH_MOVE, this.touchLineFromMove, this);
+            this.LineFrom.on(cc.Node.EventType.TOUCH_END, this.touchLineFromEnd, this);
+            this.LineFrom.on(cc.Node.EventType.TOUCH_CANCEL, this.touchLineFromEnd, this);
+        }
     }
 
     touchMove(event: cc.Event.EventTouch) {
@@ -104,6 +160,9 @@ export default class BaseNode extends cc.Component {
     /**由子节点触发事件 */
     touchLineStart(e: cc.Event.EventTouch) {
         e.stopPropagation();
+        if (this._tarUuid) {
+            return;
+        }
         let pos = this.node.convertToWorldSpaceAR(this.LineTo.position);
         /*创建线条*/
         let event = new cc.Event.EventCustom("LineCreate", true);
@@ -117,11 +176,14 @@ export default class BaseNode extends cc.Component {
     /**由子节点触发事件 */
     touchLineMove(e: cc.Event.EventTouch) {
         e.stopPropagation();
+        if (this._tarUuid) {
+            return;
+        }
         let pos = e.getLocation();
-        pos = this.node.convertToNodeSpaceAR(pos);
+        // pos = this.node.convertToNodeSpaceAR(pos);
         // pos.x /= cc.Camera.main.zoomRatio;
         // pos.y /= cc.Camera.main.zoomRatio;
-        pos = this.node.convertToWorldSpaceAR(pos);
+        // pos = this.node.convertToWorldSpaceAR(pos);
         /*创建线条*/
         let event = new cc.Event.EventCustom("LineMove", true);
         event.detail = {
@@ -135,6 +197,9 @@ export default class BaseNode extends cc.Component {
     touchLineEnd(e) {
         e.stopPropagation();
         let pos = e.getLocation();
+        if (this._tarUuid) {
+            return;
+        }
         // pos.x /= cc.Camera.main.zoomRatio;
         // pos.y /= cc.Camera.main.zoomRatio;
 
@@ -155,6 +220,11 @@ export default class BaseNode extends cc.Component {
             }
         }
         this.node.dispatchEvent(event)
+    }
+
+    bindUuid(uuid) {
+        this._tarUuid = uuid;
+        this.registerEvent();
     }
 
     receiveData(tweenData) {
