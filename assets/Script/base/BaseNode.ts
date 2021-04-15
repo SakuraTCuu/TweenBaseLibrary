@@ -42,10 +42,12 @@ export default class BaseNode extends cc.Component {
         this._tweenFlag = value;
     }
 
+    protected _preTween: cc.Tween = null; //上级传过来的tween
     protected _isBind: boolean = true;
     protected _uuid: string = Date.now() + "";//随机生成uuid 作为唯一标识 TODO Temp
     protected _toUuid: string = "";  //右边节点  to
     protected _fromUuid: string = ""; //左边节点 接收
+    protected color = '#ff0000';
 
     onLoad() {
     }
@@ -56,12 +58,18 @@ export default class BaseNode extends cc.Component {
 
     bindFromUuid(uuid) {
         this._fromUuid = uuid;
+        if (this._fromUuid && this._fromUuid !== uuid) { /**换绑 */
+            this._preTween = null;
+            this.sendTweenData(0);
+        }
         this.registerEvent();
     }
 
     unBindFromUuid() {
         this._fromUuid = "";
-        this.unBindTween();
+        this._preTween = null;
+        /**解绑后重新发送tweendata */
+        this.sendTweenData(0);
         this.unRegisterEvent();
     }
 
@@ -195,7 +203,8 @@ export default class BaseNode extends cc.Component {
         let event = new cc.Event.EventCustom("LineCreate", true);
         event.detail = {
             uuid: this._uuid,
-            pos
+            pos,
+            color: this.color
         }
         this.node.dispatchEvent(event)
     }
@@ -239,7 +248,8 @@ export default class BaseNode extends cc.Component {
     }
 
     receiveData(tweenData) {
-        this.solveData(tweenData);
+        this._preTween = tweenData;
+        this.solveData();
     }
 
     sendTweenData(isCustom, targetName?, tweenData?) {
@@ -261,8 +271,7 @@ export default class BaseNode extends cc.Component {
     }
 
     /**子类实现 */
-    solveData(tweenData) { }
+    solveData() { }
     returnData(type) { }
-    unBindTween() { }
 
 }

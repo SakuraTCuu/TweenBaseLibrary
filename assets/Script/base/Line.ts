@@ -15,6 +15,8 @@ export default class Line extends cc.Component {
     c3: cc.Vec2 = null;
     c4: cc.Vec2 = null;
 
+    color: any = '#00ff00';
+
     onLoad() {
         // this.test();
         // this.node.on(cc.Node.EventType.TOUCH_START, this.touchStart, this)
@@ -62,6 +64,14 @@ export default class Line extends cc.Component {
     //     /**绘制动态球 */
     //     this.runCircle(0.5);
     // }
+
+    setColor(color) {
+        this.color = color;
+        this.Graphics.strokeColor = cc.color(this.color);
+        this.Graphics.fillColor = cc.color(this.color);
+        this.Graphics2.strokeColor = cc.color(this.color);
+        this.Graphics2.fillColor = cc.color(this.color);
+    }
 
     clear() {
         this.Graphics.clear(true);
@@ -171,7 +181,7 @@ export default class Line extends cc.Component {
                 this.Graphics2.circle(c3.x, c3.y, 7);
             }
             this.Graphics2.stroke();
-            this.Graphics2.fillColor = cc.Color.RED;
+            // this.Graphics2.fillColor = cc.color(this.color); //cc.Color.RED;
             this.Graphics2.fill();
             if (i1 >= len - 1) {
                 /**新循环 */

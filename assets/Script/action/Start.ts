@@ -12,7 +12,7 @@ export default class Start extends BaseNode {
         this.initEvent();
     }
 
-    solveData(tweenData) {
-        this.sendTweenData(1, 'tweenStart', tweenData)
+    solveData() {
+        this.sendTweenData(1, 'tweenStart', this._preTween)
     }
 }

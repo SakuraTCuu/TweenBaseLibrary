@@ -1,43 +1,36 @@
 import BaseNode from "../base/BaseNode";
-import { TweenFlag, TweenType } from "../base/Config";
+import { TweenType, TweenFlag } from "../base/Config";
 
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-export default class Position extends BaseNode {
+export default class Color extends BaseNode {
+
 
     @property(cc.EditBox)
     tEdit: cc.EditBox = null;
 
     @property(cc.EditBox)
-    xEdit: cc.EditBox = null;
-
-    @property(cc.EditBox)
-    yEdit: cc.EditBox = null;
+    cEdit: cc.EditBox = null;
 
     time: number = 1;
-    x: number = 50;
-    y: number = 0;
+    c: any = '#ff0000';
 
     _receiveTween = null;
 
     onLoad() {
-        this._tweenType = TweenType.POSITION;
-        this.color = '#00ff00'
+        this._tweenType = TweenType.OPACITY;
+        this.color = '#00C2F9'
 
         this.tEdit.string = this.time + "";
-        this.xEdit.string = this.x + "";
-        this.yEdit.string = this.y + "";
+        this.cEdit.string = this.c;
         this.initEvent();
     }
 
     onChangeEnd(event, data) {
         switch (data) {
-            case "x":
-                this.x = Number(event.string);
-                break;
-            case "y":
-                this.y = Number(event.string);
+            case "c":
+                this.c = event.string;
                 break;
             case "t":
                 this.time = Number(event.string);
@@ -52,11 +45,11 @@ export default class Position extends BaseNode {
         let tween = cc.tween();
         if (this._tweenFlag === TweenFlag.TO) {
             tween.to(this.time, {
-                position: cc.v2(this.x, this.y)
+                color: cc.color(this.c)
             })
         } else {
-            tween.by(this.time, {
-                position: cc.v2(this.x, this.y)
+            tween.to(this.time, {
+                color: cc.color(this.c)
             })
         }
 

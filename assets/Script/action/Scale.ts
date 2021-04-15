@@ -4,7 +4,7 @@ import { TweenFlag, TweenType } from "../base/Config";
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-export default class Position extends BaseNode {
+export default class Scale extends BaseNode {
 
     @property(cc.EditBox)
     tEdit: cc.EditBox = null;
@@ -16,14 +16,14 @@ export default class Position extends BaseNode {
     yEdit: cc.EditBox = null;
 
     time: number = 1;
-    x: number = 50;
-    y: number = 0;
+    x: number = 0.2;
+    y: number = 0.2;
 
     _receiveTween = null;
 
     onLoad() {
         this._tweenType = TweenType.POSITION;
-        this.color = '#00ff00'
+        this.color = '#0000ff'
 
         this.tEdit.string = this.time + "";
         this.xEdit.string = this.x + "";
@@ -52,11 +52,13 @@ export default class Position extends BaseNode {
         let tween = cc.tween();
         if (this._tweenFlag === TweenFlag.TO) {
             tween.to(this.time, {
-                position: cc.v2(this.x, this.y)
+                scaleX: this.x,
+                scaleY: this.y,
             })
         } else {
             tween.by(this.time, {
-                position: cc.v2(this.x, this.y)
+                scaleX: this.x,
+                scaleY: this.y,
             })
         }
 

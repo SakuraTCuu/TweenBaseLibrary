@@ -18,8 +18,6 @@ export default class Helloworld extends cc.Component {
     @property(cc.Node)
     ContentNode: cc.Node = null;
 
-    @property(cc.Prefab)
-    PositionPre: cc.Prefab = null;
 
     @property(cc.Prefab)
     StartPre: cc.Prefab = null;
@@ -27,8 +25,22 @@ export default class Helloworld extends cc.Component {
     @property(cc.Prefab)
     LinePrefab: cc.Prefab = null;
 
+    @property(cc.Prefab)
+    PositionPre: cc.Prefab = null;
+    @property(cc.Prefab)
+    ScalePre: cc.Prefab = null;
+    @property(cc.Prefab)
+    AlphaPre: cc.Prefab = null;
+    @property(cc.Prefab)
+    AnglePre: cc.Prefab = null;
+    @property(cc.Prefab)
+    ColorPre: cc.Prefab = null;
+    @property(cc.Node)
+    TweenListNode: cc.Node = null;
+
     zIndex = 0;
 
+    clickPos: cc.Vec3 = cc.v3();
     LineNodeListInfo = {};
     touchType: boolean = true;
 
@@ -57,7 +69,6 @@ export default class Helloworld extends cc.Component {
     }
 
     initView() {
-
         this.ContentNode.setContentSize(10000, 10000);
         /**创建矢量幕布 */
         // this.addEvent(this.MainNode);
@@ -142,10 +153,12 @@ export default class Helloworld extends cc.Component {
         this.NodeList[uuid].getComponent(BaseNode).unBindFromUuid();
         this.NodeList[tarUuid].getComponent(BaseNode).unBindToUuid();
 
-        this.LineNodeListInfo[uuid].getComponent(Line).clear();
-        this.LineNodeListInfo[uuid] = null;
+        /**解绑完成后发送消息 */
 
-        delete this.LineNodeListInfo[uuid];
+        this.LineNodeListInfo[tarUuid].getComponent(Line).clear();
+        this.LineNodeListInfo[tarUuid] = null;
+
+        delete this.LineNodeListInfo[tarUuid];
     }
 
     receiveTweenData(e) {
@@ -162,18 +175,29 @@ export default class Helloworld extends cc.Component {
 
     tweenStart(e) {
         let { tarUuid, tweenData } = e.getUserData();
+        this.MainNode.stopAllActions();
         tweenData = tweenData as cc.Tween;
         tweenData
             .target(this.MainNode)
             .call(() => {
-                this.MainNode.position = cc.v3();
+                /**重置 */
+                this.resetTween();
             })
+            // .repeatForever(tweenData) /**重复执行 */
             .start();
         // cc.log("run")
         // cc.tween()
         //     .target(this.MainNode)
         //     .to(0.5, { position: cc.v2(200, 200) })
         //     .start();
+    }
+
+    resetTween() {
+        this.MainNode.position = cc.v3();
+        this.MainNode.scale = 1;
+        this.MainNode.opacity = 255;
+        this.MainNode.angle = 0;
+        this.MainNode.color = cc.color(255, 255, 255, 255);
     }
 
     toFromLogic(e) {
@@ -205,10 +229,11 @@ export default class Helloworld extends cc.Component {
 
     /**创建线条 */
     createLine(e) {
-        let { uuid, pos } = e.getUserData();
+        let { uuid, pos, color } = e.getUserData();
         pos = this.ContentNode.convertToNodeSpaceAR(pos);
         let LineNode = cc.instantiate(this.LinePrefab);
         LineNode.getComponent(Line).touchStart(pos);
+        LineNode.getComponent(Line).setColor(color);
         LineNode.parent = this.ContentNode;
         this.LineNodeListInfo[uuid] = LineNode;
     }
@@ -316,12 +341,16 @@ export default class Helloworld extends cc.Component {
         if (this.touchType && event.getButton() === cc.Event.EventMouse.BUTTON_RIGHT) {
             let pos = event.getLocation();
             pos = this.ContentNode.convertToNodeSpaceAR(pos);
-            let item = cc.instantiate(this.PositionPre);
-            item.position = pos;
-            item.parent = this.ContentNode;
-            let uuid = item.getComponent(BaseNode).getUuid();
-            this.NodeList[uuid] = item;
-            this.addEvent(item);
+            this.clickPos = pos;
+            this.TweenListNode.position = pos;
+            this.TweenListNode.active = true;
+            /**展示List */
+            // let item = cc.instantiate(this.PositionPre);
+            // item.position = pos;
+            // item.parent = this.ContentNode;
+            // let uuid = item.getComponent(BaseNode).getUuid();
+            // this.NodeList[uuid] = item;
+            // this.addEvent(item);
         }
     }
 
@@ -334,6 +363,7 @@ export default class Helloworld extends cc.Component {
      * @param event 
      */
     touchMove(event: cc.Event.EventTouch) {
+        this.TweenListNode.active = false;
         event.stopPropagation();
         let x = event.getDeltaX();
         let y = event.getDeltaY();
@@ -405,5 +435,48 @@ export default class Helloworld extends cc.Component {
         return cc.tween().to(0.5, {
             scale: 2
         })
+    }
+
+    /**创建一个tween节点 */
+    createTweenNode(prefab: cc.Prefab) {
+        // let pos = event.getLocation();
+        let pos = this.clickPos;
+        let item = cc.instantiate(prefab);
+        item.position = pos;
+        item.parent = this.ContentNode;
+        let uuid = item.getComponent(BaseNode).getUuid();
+        this.NodeList[uuid] = item;
+        this.addEvent(item);
+    }
+
+    onClickTweenList(event, type) {
+        this.TweenListNode.active = false;
+        switch (type) {
+            case 'position':
+                this.createTweenNode(this.PositionPre);
+                break;
+            case 'scale':
+                this.createTweenNode(this.ScalePre);
+                break;
+            case 'opacity':
+                this.createTweenNode(this.AlphaPre);
+                break;
+            case 'angle':
+                this.createTweenNode(this.AnglePre);
+                break;
+            case 'color':
+                this.createTweenNode(this.ColorPre);
+                break;
+            case 'sequence':
+                alert('开发中...')
+                break;
+            case 'parallel':
+                alert('开发中...')
+                break;
+            case 'repeat':
+                alert('开发中...')
+                break;
+
+        }
     }
 }
