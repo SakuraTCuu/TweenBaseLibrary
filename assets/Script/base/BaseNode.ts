@@ -47,7 +47,16 @@ export default class BaseNode extends cc.Component {
     protected _uuid: string = Date.now() + "";//随机生成uuid 作为唯一标识 TODO Temp
     protected _toUuid: string = "";  //右边节点  to
     protected _fromUuid: string = ""; //左边节点 接收
-    protected color = '#ff0000';
+    private _color: any = '#ff0000';
+    protected get color() {
+        return this._color;
+    }
+    protected set color(value) {
+        // this.node.color = cc.color(value);
+        this.LineTo.color = cc.color(value);
+        this.LineFrom.color = cc.color(value);
+        this._color = value;
+    }
 
     onLoad() {
     }
@@ -248,13 +257,20 @@ export default class BaseNode extends cc.Component {
     }
 
     receiveData(tweenData) {
-        this._preTween = tweenData;
-        this.solveData();
+        this._preTween = tweenData.clone();
+        let flag = 0,
+            targetName;
+        if (this._tweenType === TweenType.START) {
+            flag = 1;
+            targetName = 'tweenStart'
+        }
+        this.sendTweenData(flag, targetName);
     }
 
-    sendTweenData(isCustom, targetName?, tweenData?) {
+    sendTweenData(isCustom, targetName?) {
         targetName = targetName || "tweenData";
-        tweenData = tweenData || this.returnData(0);
+
+        let tweenData = this.getStandardTween(this.returnData());
 
         if (!isCustom) {
             if (!this._toUuid) {
@@ -270,8 +286,49 @@ export default class BaseNode extends cc.Component {
         this.node.dispatchEvent(tweenEvent)
     }
 
-    /**子类实现 */
-    solveData() { }
-    returnData(type) { }
+    export: boolean = false;
 
+    /**封装好的数据 */
+    getStandardTween(oriTween: cc.Tween) {
+        let tween = this.getStartTween().clone();
+        let endTween = this.getEndTween().clone();
+
+        if (!this.export) {
+            if (this._preTween) { //把上级tween封装进来
+                return this._preTween.then(tween).then(oriTween).then(endTween);
+            }
+            return tween.then(oriTween).then(endTween);
+        } else {
+            if (this._preTween) { //把上级tween封装进来
+                let temp = this._preTween.clone();
+                return temp.then(tween).then(endTween);
+            }
+            return tween.then(endTween);
+        }
+    }
+
+    getStartTween() { /**开始动画前插入一个回调 */
+        if (!this.export) {
+            return cc.tween().call(() => {
+                this.startEffect();
+            }).clone();
+        }
+    }
+
+    getEndTween() {
+        if (!this.export) {/**动画结束后插入一个回调 */
+            return cc.tween().call(() => {
+                this.endEffect();
+            })
+        }
+    }
+
+    /**子类实现 */
+    startEffect() {
+        this.node.color = cc.Color.RED;
+    }
+    endEffect() {
+        this.node.color = cc.Color.BLACK;
+    }
+    returnData(): cc.Tween { return cc.tween() }
 }

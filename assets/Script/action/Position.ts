@@ -48,7 +48,7 @@ export default class Position extends BaseNode {
     }
 
     /**怎么返回tween? */
-    returnData(type) {
+    returnData() {
         let tween = cc.tween();
         if (this._tweenFlag === TweenFlag.TO) {
             tween.to(this.time, {
@@ -59,19 +59,6 @@ export default class Position extends BaseNode {
                 position: cc.v2(this.x, this.y)
             })
         }
-
-        tween['_uuid'] = this._uuid;
-
-        if (this._preTween) { //把上级tween封装进来
-            let temp = this._preTween.clone();
-            temp['_uuid'] = this._uuid;
-            return temp.then(tween);
-        }
         return tween;
-    }
-
-    solveData() {
-        let curTween = this.returnData(1);
-        this.sendTweenData(0, 'tweenData', curTween);
     }
 }

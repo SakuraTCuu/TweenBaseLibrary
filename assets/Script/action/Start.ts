@@ -8,11 +8,7 @@ export default class Start extends BaseNode {
 
     onLoad() {
         this._tweenType = TweenType.START;
-
         this.initEvent();
     }
-
-    solveData() {
-        this.sendTweenData(1, 'tweenStart', this._preTween)
-    }
+ 
 }
