@@ -1,4 +1,4 @@
-import { EasingType, TweenFlag, TweenType } from "./Config";
+import { EasingType, TweenFlag, TweenType, TypeColor } from "./Config";
 
 const { ccclass, property } = cc._decorator;
 
@@ -17,6 +17,9 @@ export default class BaseNode extends cc.Component {
 
     @property(cc.Label)
     UuidLabel: cc.Label = null;
+
+    @property(cc.Sprite)
+    Effect: cc.Sprite = null;
 
     protected _tweenType: TweenType = TweenType.NORMAL;/**type类型，用于标识是何种类型 */
     public get type() {
@@ -47,14 +50,15 @@ export default class BaseNode extends cc.Component {
     protected _uuid: string = Date.now() + "";//随机生成uuid 作为唯一标识 TODO Temp
     protected _toUuid: string = "";  //右边节点  to
     protected _fromUuid: string = ""; //左边节点 接收
+    protected time: number = 0;
     private _color: any = '#ff0000';
     protected get color() {
         return this._color;
     }
     protected set color(value) {
         // this.node.color = cc.color(value);
-        this.LineTo.color = cc.color(value);
-        this.LineFrom.color = cc.color(value);
+        // this.LineTo.color = cc.color(value);
+        // this.LineFrom.color = cc.color(value);
         this._color = value;
     }
 
@@ -95,7 +99,13 @@ export default class BaseNode extends cc.Component {
      * 当节点移动时,触发时间
      */
     initEvent() {
-        this.UuidLabel.string = this._uuid;
+        this.UuidLabel.string = this._uuid + "   " + this.getNodeType();
+
+        this.node.color = this.getNodeColor();
+        this.LineTo && (this.LineTo.color = this.node.color);
+        this.LineFrom && (this.LineFrom.color = this.node.color);
+        this.Effect && (this.Effect.node.color = cc.Color.WHITE);
+
         this.node.on(cc.Node.EventType.TOUCH_MOVE, this.touchMove, this)
         this.node.on(cc.Node.EventType.TOUCH_END, this.touchEnd, this)
 
@@ -106,6 +116,30 @@ export default class BaseNode extends cc.Component {
             this.LineTo.on(cc.Node.EventType.TOUCH_CANCEL, this.touchLineEnd, this);
         }
         this.sendPosition();
+    }
+
+    getNodeColor(): cc.Color {
+        switch (this._tweenType) {
+            case TweenType.POSITION: return cc.color(TypeColor.position);
+            case TweenType.SCALE: return cc.color(TypeColor.scale);
+            case TweenType.ALPHA: return cc.color(TypeColor.alpha);
+            case TweenType.ANGLE: return cc.color(TypeColor.angle);
+            case TweenType.COLOR: return cc.color(TypeColor.color);
+            case TweenType.START: return cc.color(TypeColor.start);
+                return cc.Color.BLUE;
+        }
+    }
+
+    getNodeType(): string {
+        switch (this._tweenType) {
+            case TweenType.POSITION: return 'Position';
+            case TweenType.SCALE: return 'Sale';
+            case TweenType.ALPHA: return 'Alpha';
+            case TweenType.ANGLE: return 'Angle';
+            case TweenType.COLOR: return 'Color';
+            case TweenType.START: return 'Start';
+                return '';
+        }
     }
 
     touchLineFromStart(e: cc.Event.EventTouch) {
@@ -213,7 +247,7 @@ export default class BaseNode extends cc.Component {
         event.detail = {
             uuid: this._uuid,
             pos,
-            color: this.color
+            color: this.node.color
         }
         this.node.dispatchEvent(event)
     }
@@ -256,6 +290,7 @@ export default class BaseNode extends cc.Component {
         this.node.dispatchEvent(event)
     }
 
+    /**处理循环引用 */
     receiveData(tweenData) {
         this._preTween = tweenData.clone();
         let flag = 0,
@@ -293,9 +328,10 @@ export default class BaseNode extends cc.Component {
         let tween = this.getStartTween().clone();
         let endTween = this.getEndTween().clone();
 
-        if (!this.export) {
+        if (!this.export && this._tweenType !== TweenType.START) {
             if (this._preTween) { //把上级tween封装进来
-                return this._preTween.then(tween).then(oriTween).then(endTween);
+                let temp = this._preTween.clone();
+                return temp.then(tween).then(oriTween).then(endTween);
             }
             return tween.then(oriTween).then(endTween);
         } else {
@@ -325,10 +361,24 @@ export default class BaseNode extends cc.Component {
 
     /**子类实现 */
     startEffect() {
-        this.node.color = cc.Color.RED;
+        if (!this.Effect) {
+            return;
+        }
+        // this.node.color = cc.Color.RED;
+        this.Effect.node.active = true;
+        this.Effect.node.opacity = 200;
+        this.Effect.fillRange = 0;
+        this.Effect.node.stopAllActions();
+        cc.tween(this.Effect).to(this.time, {
+            fillRange: 1
+        }).call(() => {
+            this.Effect.node.active = false;
+        }).start();
     }
     endEffect() {
-        this.node.color = cc.Color.BLACK;
+        // this.node.color = cc.Color.BLACK;
     }
     returnData(): cc.Tween { return cc.tween() }
 }
+
+

@@ -18,7 +18,6 @@ export default class Helloworld extends cc.Component {
     @property(cc.Node)
     ContentNode: cc.Node = null;
 
-
     @property(cc.Prefab)
     StartPre: cc.Prefab = null;
 
@@ -38,6 +37,9 @@ export default class Helloworld extends cc.Component {
     @property(cc.Node)
     TweenListNode: cc.Node = null;
 
+    @property(cc.Sprite)
+    Test: cc.Sprite = null;
+
     zIndex = 0;
 
     clickPos: cc.Vec3 = cc.v3();
@@ -54,9 +56,23 @@ export default class Helloworld extends cc.Component {
 
     NodeList = {};
 
+    width
     onLoad() {
         this.initView();
         this.initEvent();
+        this.width = this.Test.node.width;
+    }
+
+    update() {
+        // if (this.Test.fillRange > 1) {
+        //     return
+        // }
+        // if (this.Test.node.width <= 0) {
+        //     return
+        // }
+        // this.Test.fillRange += 0.01;
+        // this.Test.node.width -= 0.08 * this.width;
+        this.Test.node.x += 10;
     }
 
     start() {
@@ -244,8 +260,11 @@ export default class Helloworld extends cc.Component {
         this.LineNodeListInfo[uuid].getComponent(Line).touchMove(pos);
     }
 
+    /**TODO 处理循环引用 */
     endLine(e) {
         let { uuid, pos } = e.getUserData();
+        //TODO 判断是否循环引用
+
         //判断是否在某个区域内
         let { flag, tarPos, tarUuid } = this.isContains(uuid, pos);
         if (flag) {

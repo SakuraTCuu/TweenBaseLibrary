@@ -1509,6 +1509,9 @@ declare namespace cc {
 	``` 
 	*/
 	export function color(r?: number, g?: number, b?: number, a?: number): Color;	
+
+	/** Custom */
+	export function color(str:string): Color;
 	/**
 	!#en The convenience method to create a new {{#crossLink "Mat4"}}cc.Mat4{{/crossLink}}.
 	!#zh 通过该简便的函数进行创建 {{#crossLink "Mat4"}}cc.Mat4{{/crossLink}} 对象。

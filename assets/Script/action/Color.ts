@@ -13,13 +13,13 @@ export default class Color extends BaseNode {
     @property(cc.EditBox)
     cEdit: cc.EditBox = null;
 
-    time: number = 1;
     c: any = '#ff0000';
 
     _receiveTween = null;
 
     onLoad() {
-        this._tweenType = TweenType.OPACITY;
+        this.time = 1;
+        this._tweenType = TweenType.COLOR;
         this.color = '#00C2F9'
 
         this.tEdit.string = this.time + "";

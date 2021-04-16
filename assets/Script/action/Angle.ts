@@ -13,13 +13,13 @@ export default class Angle extends BaseNode {
     @property(cc.EditBox)
     aEdit: cc.EditBox = null;
 
-    time: number = 1;
     angle: number = 360;
 
     _receiveTween = null;
 
     onLoad() {
-        this._tweenType = TweenType.OPACITY;
+        this.time = 1;
+        this._tweenType = TweenType.ANGLE;
         this.color = '#A3A613'
 
         this.tEdit.string = this.time + "";

@@ -15,13 +15,13 @@ export default class Position extends BaseNode {
     @property(cc.EditBox)
     yEdit: cc.EditBox = null;
 
-    time: number = 1;
     x: number = 50;
     y: number = 0;
 
     _receiveTween = null;
 
     onLoad() {
+        this.time = 1;
         this._tweenType = TweenType.POSITION;
         this.color = '#00ff00'
 

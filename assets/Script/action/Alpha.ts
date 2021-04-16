@@ -12,13 +12,13 @@ export default class Alpha extends BaseNode {
     @property(cc.EditBox)
     aEdit: cc.EditBox = null;
 
-    time: number = 1;
     alpha: number = 0.2;
 
     _receiveTween = null;
 
     onLoad() {
-        this._tweenType = TweenType.OPACITY;
+        this.time = 1;
+        this._tweenType = TweenType.ALPHA;
         this.color = '#D0452E'
 
         this.tEdit.string = this.time + "";

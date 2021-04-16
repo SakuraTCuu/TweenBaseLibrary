@@ -15,14 +15,14 @@ export default class Scale extends BaseNode {
     @property(cc.EditBox)
     yEdit: cc.EditBox = null;
 
-    time: number = 1;
     x: number = 0.2;
     y: number = 0.2;
 
     _receiveTween = null;
 
     onLoad() {
-        this._tweenType = TweenType.POSITION;
+        this.time = 1;
+        this._tweenType = TweenType.SCALE;
         this.color = '#0000ff'
 
         this.tEdit.string = this.time + "";
