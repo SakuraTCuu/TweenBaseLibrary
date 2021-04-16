@@ -66,7 +66,7 @@ export default class Line extends cc.Component {
     // }
 
     setColor(color) {
-        this.color = color;
+        // this.color = color;
         this.Graphics.strokeColor = cc.color(this.color);
         this.Graphics.fillColor = cc.color(this.color);
         this.Graphics2.strokeColor = cc.color(this.color);
