@@ -52,6 +52,15 @@ export default class Color extends BaseNode {
                 color: cc.color(this.c)
             })
         }
+        this.exportData();
         return tween;
+    }
+    exportData() {
+        Object.assign(this._exportData, {
+            tweenData: {
+                time: this.time,
+                color: this.c,
+            }
+        })
     }
 }

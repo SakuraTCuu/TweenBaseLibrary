@@ -43,7 +43,6 @@ export default class Position extends BaseNode {
                 this.time = Number(event.string);
                 break;
         }
-
         this.sendTweenData(0);
     }
 
@@ -59,6 +58,16 @@ export default class Position extends BaseNode {
                 position: cc.v2(this.x, this.y)
             })
         }
+        this.exportData();
         return tween;
+    }
+
+    exportData() {
+        Object.assign(this._exportData, {
+            tweenData: {
+                time: this.time,
+                position: cc.v2(this.x, this.y)
+            }
+        })
     }
 }

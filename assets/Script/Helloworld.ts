@@ -3,6 +3,17 @@ import Line from "./base/Line";
 
 const { ccclass, property } = cc._decorator;
 
+interface linkList {
+    pre: string,
+    cur: string,
+    next: string
+}
+function linkList(pre, cur, next) {
+    this.pre = pre;
+    this.cur = cur;
+    this.next = next;
+}
+
 @ccclass
 export default class Helloworld extends cc.Component {
 
@@ -55,29 +66,16 @@ export default class Helloworld extends cc.Component {
     bindInfo = [];
 
     NodeList = {};
+    exportDataList: {} = {};
 
-    width
     onLoad() {
         this.initView();
         this.initEvent();
-        this.width = this.Test.node.width;
-    }
-
-    update() {
-        // if (this.Test.fillRange > 1) {
-        //     return
-        // }
-        // if (this.Test.node.width <= 0) {
-        //     return
-        // }
-        // this.Test.fillRange += 0.01;
-        // this.Test.node.width -= 0.08 * this.width;
-        this.Test.node.x += 10;
     }
 
     start() {
         let item = cc.instantiate(this.StartPre);
-        item.position = cc.v3(200, 100);
+        item.position = cc.v3(500, 200);
         item.parent = this.ContentNode;
         let uuid = item.getComponent(BaseNode).getUuid();
         this.NodeList[uuid] = item;
@@ -87,7 +85,7 @@ export default class Helloworld extends cc.Component {
     initView() {
         this.ContentNode.setContentSize(10000, 10000);
         /**创建矢量幕布 */
-        // this.addEvent(this.MainNode);
+        this.addEvent(this.MainNode);
 
         // this.scheduleOnce(() => {
         //     let t = cc.tween().to(2, { x: 400 });
@@ -179,7 +177,7 @@ export default class Helloworld extends cc.Component {
 
     receiveTweenData(e) {
         //目标节点的uuid, 
-        let { tarUuid, tweenData } = e.getUserData();
+        let { tarUuid, tweenData, exportData } = e.getUserData();
 
         let item = this.NodeList[tarUuid];
         if (!item) {
@@ -187,6 +185,9 @@ export default class Helloworld extends cc.Component {
             return;
         }
         item.getComponent(BaseNode).receiveData(tweenData);
+
+        /**存储数据*/
+        this.exportDataList[tarUuid] = exportData;
     }
 
     tweenStart(e) {
@@ -201,6 +202,7 @@ export default class Helloworld extends cc.Component {
             })
             // .repeatForever(tweenData) /**重复执行 */
             .start();
+        cc.log(this.exportDataList);
         // cc.log("run")
         // cc.tween()
         //     .target(this.MainNode)
@@ -209,7 +211,7 @@ export default class Helloworld extends cc.Component {
     }
 
     resetTween() {
-        this.MainNode.position = cc.v3();
+        this.MainNode.position = cc.v3(500, 0);
         this.MainNode.scale = 1;
         this.MainNode.opacity = 255;
         this.MainNode.angle = 0;
@@ -325,14 +327,14 @@ export default class Helloworld extends cc.Component {
 
 
     addZoomRatio() {
-        this.MainCamera.zoomRatio += 0.02;
+        this.MainCamera.zoomRatio += 0.05;
         if (this.MainCamera.zoomRatio > 1.5) {
             this.MainCamera.zoomRatio = 1.5;
         }
     }
 
     subZoomRatio() {
-        this.MainCamera.zoomRatio -= 0.02;
+        this.MainCamera.zoomRatio -= 0.05;
         if (this.MainCamera.zoomRatio < 0.5) {
             this.MainCamera.zoomRatio = 0.5
         }
@@ -427,6 +429,7 @@ export default class Helloworld extends cc.Component {
 
     addEvent(node) {
         node.on(cc.Node.EventType.TOUCH_START, (event: cc.Event.EventTouch) => {
+            event.stopPropagation();
             node.zIndex = ++this.zIndex;
         }, this)
     }

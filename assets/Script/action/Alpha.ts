@@ -35,7 +35,6 @@ export default class Alpha extends BaseNode {
                 this.time = Number(event.string);
                 break;
         }
-
         this.sendTweenData(0);
     }
 
@@ -51,6 +50,16 @@ export default class Alpha extends BaseNode {
                 opacity: 255 * this.alpha
             })
         }
+        this.exportData();
         return tween;
+    }
+
+    exportData() {
+        Object.assign(this._exportData, {
+            tweenData: {
+                time: this.time,
+                alpha: this.alpha,
+            }
+        })
     }
 }

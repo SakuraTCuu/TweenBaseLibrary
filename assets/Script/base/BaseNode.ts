@@ -22,10 +22,10 @@ export default class BaseNode extends cc.Component {
     Effect: cc.Sprite = null;
 
     protected _tweenType: TweenType = TweenType.NORMAL;/**type类型，用于标识是何种类型 */
-    public get type() {
+    public get tweenType() {
         return this._tweenType;
     }
-    public set type(value) {
+    public set tweenType(value) {
         this._tweenType = value;
     }
 
@@ -45,7 +45,9 @@ export default class BaseNode extends cc.Component {
         this._tweenFlag = value;
     }
 
+    protected _exportData = {};
     protected _preTween: cc.Tween = null; //上级传过来的tween
+    protected _preData: [] = []; //上级传过来的tween 数据
     protected _isBind: boolean = true;
     protected _uuid: string = Date.now() + "";//随机生成uuid 作为唯一标识 TODO Temp
     protected _toUuid: string = "";  //右边节点  to
@@ -63,6 +65,7 @@ export default class BaseNode extends cc.Component {
     }
 
     onLoad() {
+
     }
 
     getUuid() {
@@ -95,16 +98,25 @@ export default class BaseNode extends cc.Component {
         this._toUuid = "";
     }
 
-    /**每一个继承自此基类的组件都向main派发事件
-     * 当节点移动时,触发时间
-     */
-    initEvent() {
+    updateView() {
         this.UuidLabel.string = this._uuid + "   " + this.getNodeType();
 
         this.node.color = this.getNodeColor();
         this.LineTo && (this.LineTo.color = this.node.color);
         this.LineFrom && (this.LineFrom.color = this.node.color);
         this.Effect && (this.Effect.node.color = cc.Color.WHITE);
+        Object.assign(this._exportData, {
+            easingType: this.easingType,
+            isRelative: this.tweenFlag,
+            tweenType: this.tweenType,
+        });
+    }
+
+    /**每一个继承自此基类的组件都向main派发事件
+     * 当节点移动时,触发时间
+     */
+    initEvent() {
+        this.updateView();
 
         this.node.on(cc.Node.EventType.TOUCH_MOVE, this.touchMove, this)
         this.node.on(cc.Node.EventType.TOUCH_END, this.touchEnd, this)
@@ -306,6 +318,7 @@ export default class BaseNode extends cc.Component {
         targetName = targetName || "tweenData";
 
         let tweenData = this.getStandardTween(this.returnData());
+        let exportData = this._exportData;
 
         if (!isCustom) {
             if (!this._toUuid) {
@@ -316,7 +329,8 @@ export default class BaseNode extends cc.Component {
         let tweenEvent = new cc.Event.EventCustom(targetName, true);
         tweenEvent.detail = {
             tarUuid: this._toUuid,
-            tweenData
+            tweenData,
+            exportData
         };
         this.node.dispatchEvent(tweenEvent)
     }
@@ -379,6 +393,7 @@ export default class BaseNode extends cc.Component {
         // this.node.color = cc.Color.BLACK;
     }
     returnData(): cc.Tween { return cc.tween() }
+    exportData() { }
 }
 
 

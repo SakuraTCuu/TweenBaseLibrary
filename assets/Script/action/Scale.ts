@@ -61,6 +61,18 @@ export default class Scale extends BaseNode {
                 scaleY: this.y,
             })
         }
+        this.exportData();
         return tween;
+    }
+
+    exportData() {
+        Object.assign(this._exportData, {
+            tweenData: {
+                time: this.time,
+                scaleX: this.x,
+                scaleY: this.y,
+                scale: { x: this.x, y: this.y }
+            }
+        })
     }
 }

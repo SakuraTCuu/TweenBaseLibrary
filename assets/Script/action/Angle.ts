@@ -52,6 +52,16 @@ export default class Angle extends BaseNode {
                 angle: this.angle
             })
         }
+        this.exportData();
         return tween;
+    }
+
+    exportData() {
+        Object.assign(this._exportData, {
+            tweenData: {
+                time: this.time,
+                angle: this.angle,
+            }
+        })
     }
 }
