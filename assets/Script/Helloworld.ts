@@ -163,31 +163,90 @@ export default class Helloworld extends cc.Component {
         })
         this.bindInfo = arr;
 
+        this.deleteExportData(tarUuid);
+
         //解绑
         this.NodeList[uuid].getComponent(BaseNode).unBindFromUuid();
         this.NodeList[tarUuid].getComponent(BaseNode).unBindToUuid();
 
         /**解绑完成后发送消息 */
-
         this.LineNodeListInfo[tarUuid].getComponent(Line).clear();
         this.LineNodeListInfo[tarUuid] = null;
 
         delete this.LineNodeListInfo[tarUuid];
     }
 
-    receiveTweenData(e) {
-        //目标节点的uuid, 
-        let { tarUuid, tweenData, exportData } = e.getUserData();
+    /** 删除 可达性 */
+    deleteExportData(index) {
+        if (this.exportDataList[index]) {
+            let preIndex = this.exportDataList[index].preUuid;
+            this.deleteExportData(preIndex);
+            cc.log('delete uuid:', index);
+            delete this.exportDataList[index];
+        }
+    }
 
-        let item = this.NodeList[tarUuid];
+    addExportData(curIndex, preIndex) {
+        if (preIndex && !this.exportDataList[preIndex]) {
+            let { curUuid, preUuid, nextUuid, exportData } = this.NodeList[preIndex].getComponent(BaseNode).getBaseInfo();
+            if (nextUuid !== curIndex) {
+                cc.error("preUuid is no bind");
+                return;
+            }
+            this.exportDataList[curUuid] = {
+                preUuid,
+                exportData,
+                nextUuid
+            };
+            this.addExportData(curUuid, preUuid);
+        }
+    }
+
+    parseExportData() {
+        /**寻找没有pre的那一个就是最开始的 */
+        let index;
+        for (const key in this.exportDataList) {
+            if (Object.prototype.hasOwnProperty.call(this.exportDataList, key)) {
+                const pre = this.exportDataList[key].preUuid;
+                if (!pre) {
+                    index = key;
+                    break;
+                }
+            }
+        }
+
+        cc.log(index);
+        let result = [];
+        while (index && index !== -1 && this.exportDataList[index]) {
+            let data = this.exportDataList[index].exportData;
+            result.push(data);
+            index = this.exportDataList[index].nextUuid;
+        }
+        return result;
+    }
+
+    receiveTweenData(e) {
+        //目标节点的uuid,
+        let { preUuid, curUuid, nextUuid, tweenData, exportData } = e.getUserData();
+
+        let item = this.NodeList[nextUuid];
         if (!item) {
             cc.log("error, tarUuid not found");
             return;
         }
+
         item.getComponent(BaseNode).receiveData(tweenData);
 
         /**存储数据*/
-        this.exportDataList[tarUuid] = exportData;
+        /**todo 双链表存储数据 */
+        this.exportDataList[curUuid] = {
+            preUuid,
+            exportData,
+            nextUuid
+        }
+
+        /**沿着preUuid一直遍历到头 看exportData里是否有记录uuid*/
+        this.addExportData(curUuid, preUuid);
     }
 
     tweenStart(e) {
@@ -203,11 +262,12 @@ export default class Helloworld extends cc.Component {
             // .repeatForever(tweenData) /**重复执行 */
             .start();
         cc.log(this.exportDataList);
-        // cc.log("run")
-        // cc.tween()
-        //     .target(this.MainNode)
-        //     .to(0.5, { position: cc.v2(200, 200) })
-        //     .start();
+        /**解析数据 */
+        /**延后 */
+        setTimeout(()=>{
+            let data = this.parseExportData();
+            cc.log(data)
+        })
     }
 
     resetTween() {
@@ -277,6 +337,12 @@ export default class Helloworld extends cc.Component {
             /**更新节点 */
             this.NodeList[uuid].getComponent(BaseNode).bindToUuid(tarUuid);
             this.NodeList[tarUuid].getComponent(BaseNode).bindFromUuid(uuid);
+
+            /**更新引用关系啊,不能忘啊 */
+            if (this.exportDataList[tarUuid]) {
+                this.exportDataList[tarUuid]['preUuid'] = uuid;
+            }
+
         } else {
             this.LineNodeListInfo[uuid].getComponent(Line).clear();
             this.LineNodeListInfo[uuid] = null;
@@ -432,31 +498,6 @@ export default class Helloworld extends cc.Component {
             event.stopPropagation();
             node.zIndex = ++this.zIndex;
         }, this)
-    }
-
-    startTween() {
-        let t1 = this.opacityTween();
-        let t2 = this.scaleTween();
-
-        let tween = cc.tween()
-            .target(this.MainNode)
-            .parallel(
-                t1,
-                t2
-            )
-        return tween.start();
-    }
-
-    opacityTween() {
-        return cc.tween().to(0.5, {
-            opacity: 0
-        })
-    }
-
-    scaleTween() {
-        return cc.tween().to(0.5, {
-            scale: 2
-        })
     }
 
     /**创建一个tween节点 */

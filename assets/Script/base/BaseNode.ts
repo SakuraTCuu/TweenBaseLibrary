@@ -72,11 +72,22 @@ export default class BaseNode extends cc.Component {
         return this._uuid;
     }
 
+    /**获取当前节点所有信息 */
+    getBaseInfo() {
+        return {
+            curUuid: this._uuid,
+            preUuid: this._fromUuid,
+            nextUuid: this._toUuid,
+            exportData: this._exportData
+        }
+    }
+
     bindFromUuid(uuid) {
-        this._fromUuid = uuid;
         if (this._fromUuid && this._fromUuid !== uuid) { /**换绑 */
             this._preTween = null;
             this.sendTweenData(0);
+        } else {
+            this._fromUuid = uuid;
         }
         this.registerEvent();
     }
@@ -307,11 +318,12 @@ export default class BaseNode extends cc.Component {
         this._preTween = tweenData.clone();
         let flag = 0,
             targetName;
+        this.sendTweenData(flag, targetName);
         if (this._tweenType === TweenType.START) {
             flag = 1;
             targetName = 'tweenStart'
+            this.sendTweenData(flag, targetName);
         }
-        this.sendTweenData(flag, targetName);
     }
 
     sendTweenData(isCustom, targetName?) {
@@ -321,14 +333,16 @@ export default class BaseNode extends cc.Component {
         let exportData = this._exportData;
 
         if (!isCustom) {
-            if (!this._toUuid) {
-                return;
-            }
+            // if (!this._toUuid) { //放开限制
+            //     return;
+            // }
         }
 
         let tweenEvent = new cc.Event.EventCustom(targetName, true);
         tweenEvent.detail = {
-            tarUuid: this._toUuid,
+            preUuid: this._fromUuid,
+            curUuid: this._uuid,
+            nextUuid: this._toUuid,
             tweenData,
             exportData
         };
