@@ -52,8 +52,21 @@ export default class BaseNode extends cc.Component {
     protected _uuid: string = Date.now() + "";//随机生成uuid 作为唯一标识 TODO Temp
     protected _toUuid: string = "";  //右边节点  to
     protected _fromUuid: string = ""; //左边节点 接收
-    protected time: number = 0;
+    private _time: number = 0;
+    protected get time(): number {
+        return this._time;
+    }
+    protected set time(value: number) {
+        let dis = value - this.time;
+        this.otherTime += dis;
+        this._time = value;
+    }
+    protected otherTime: number = 0; //剩余时间
+    protected startTime: number = 0; //开始时间
     private _color: any = '#ff0000';
+    private isRunning: boolean = false;
+    private isStop: boolean = false;
+    private effectTween: cc.Tween = null;
     protected get color() {
         return this._color;
     }
@@ -178,12 +191,11 @@ export default class BaseNode extends cc.Component {
             return;
         }
         let pos = e.getLocation();
-        let event = new cc.Event.EventCustom("LineMove", true);
-        event.detail = {
+        let data = {
             uuid: this._fromUuid,
             pos: pos
         }
-        this.node.dispatchEvent(event)
+        this.dispatchEvent("LineMove", data)
     }
 
     touchLineFromEnd(e: cc.Event.EventTouch) {
@@ -195,14 +207,12 @@ export default class BaseNode extends cc.Component {
         let pos = e.getLocation();
 
         /**判断是否有接触目标区域 */
-        let event = new cc.Event.EventCustom("LineUnbind", true);
-
-        event.detail = {
+        let data = {
             uuid: this._uuid,
             from_uuid: this._fromUuid,
             pos,
         }
-        this.node.dispatchEvent(event)
+        this.dispatchEvent("LineUnbind", data)
     }
 
     registerEvent() {
@@ -225,6 +235,11 @@ export default class BaseNode extends cc.Component {
 
     touchMove(event: cc.Event.EventTouch) {
         // event.stopPropagation(); //事件透传
+        if (this.isRunning) {
+            event.stopPropagation();
+            /**stop tween */
+            return;
+        }
         event['isBaseTouchMove'] = true;
         let x = event.getDeltaX();
         let y = event.getDeltaY();
@@ -235,6 +250,25 @@ export default class BaseNode extends cc.Component {
 
     touchEnd() {
         event.stopPropagation();
+        if (this.isRunning) {
+            let data = {
+                uuid: this._uuid,
+            }
+            if (this.isStop) {
+                cc.log("resume");
+                this.isStop = false;
+                this.resetEffectTween();
+                this.dispatchEvent('tweenResume', data)
+            } else {/**stop tween */
+                cc.log("stop");
+                this.isStop = true;
+                this.effectTween.stop();
+                this.otherTime -= (Date.now() - this.startTime) / 1000;
+                cc.log(this.otherTime);
+                this.dispatchEvent('tweenStop', data)
+            }
+            return;
+        }
         this.sendPosition();
     }
 
@@ -247,14 +281,12 @@ export default class BaseNode extends cc.Component {
             fromPos = this.node.convertToWorldSpaceAR(this.LineFrom.position);
         }
 
-        /*派发*/
-        let event = new cc.Event.EventCustom("toFromInfo", true);
-        event.detail = {
+        let data = {
             uuid: this._uuid,
             toPos,
             fromPos
         }
-        this.node.dispatchEvent(event)
+        this.dispatchEvent('toFromInfo', data)
     }
 
     /**=================================曲线线条事件============================================== */
@@ -266,13 +298,12 @@ export default class BaseNode extends cc.Component {
         }
         let pos = this.node.convertToWorldSpaceAR(this.LineTo.position);
         /*创建线条*/
-        let event = new cc.Event.EventCustom("LineCreate", true);
-        event.detail = {
+        let data = {
             uuid: this._uuid,
             pos,
             color: this.node.color
         }
-        this.node.dispatchEvent(event)
+        this.dispatchEvent('LineCreate', data)
     }
 
     /**由子节点触发事件 */
@@ -287,12 +318,11 @@ export default class BaseNode extends cc.Component {
         // pos.y /= cc.Camera.main.zoomRatio;
         // pos = this.node.convertToWorldSpaceAR(pos);
         /*创建线条*/
-        let event = new cc.Event.EventCustom("LineMove", true);
-        event.detail = {
+        let data = {
             uuid: this._uuid,
             pos: pos
         }
-        this.node.dispatchEvent(event)
+        this.dispatchEvent('LineMove', data);
     }
 
     /**由子节点触发事件 */
@@ -304,13 +334,11 @@ export default class BaseNode extends cc.Component {
         }
 
         /**判断是否有接触目标区域 */
-        let event = new cc.Event.EventCustom("LineEnd", true);
-
-        event.detail = {
+        let data = {
             uuid: this._uuid,
             pos: pos,
         }
-        this.node.dispatchEvent(event)
+        this.dispatchEvent('LineEnd', data)
     }
 
     /**处理循环引用 */
@@ -338,15 +366,14 @@ export default class BaseNode extends cc.Component {
             // }
         }
 
-        let tweenEvent = new cc.Event.EventCustom(targetName, true);
-        tweenEvent.detail = {
+        let data = {
             preUuid: this._fromUuid,
             curUuid: this._uuid,
             nextUuid: this._toUuid,
             tweenData,
             exportData
         };
-        this.node.dispatchEvent(tweenEvent)
+        this.dispatchEvent(targetName, data)
     }
 
     export: boolean = false;
@@ -397,12 +424,52 @@ export default class BaseNode extends cc.Component {
         this.Effect.node.opacity = 200;
         this.Effect.fillRange = 0;
         this.Effect.node.stopAllActions();
-        cc.tween(this.Effect).to(this.time, {
-            fillRange: 1
-        }).call(() => {
-            this.Effect.node.active = false;
-        }).start();
+
+        this.effectTween = cc.tween(this.Effect);
+        this.effectTween
+            .call(() => {
+                this.otherTime = this.time;
+                this.startTime = Date.now();
+                this.isStop = false;
+                this.isRunning = true;
+            })
+            .to(this.time, {
+                fillRange: 1
+            })
+            .call(() => {
+                this.isStop = false;
+                this.isRunning = false;
+                this.Effect.node.active = false;
+                this.otherTime = this.time;
+            })
+            .start();
     }
+
+    resetEffectTween() {
+        this.effectTween = cc.tween(this.Effect);
+        this.effectTween
+            .call(() => {
+                this.startTime = Date.now();
+            })
+            .to(this.otherTime, {
+                fillRange: 1
+            })
+            .call(() => {
+                this.isStop = false;
+                this.isRunning = false;
+                this.Effect.node.active = false;
+                this.otherTime = this.time;
+            })
+            .start();
+    }
+
+    /**send event */
+    dispatchEvent(name, data) {
+        let event = new cc.Event.EventCustom(name, true);
+        event.detail = data;
+        this.node.dispatchEvent(event);
+    }
+
     endEffect() {
         // this.node.color = cc.Color.BLACK;
     }

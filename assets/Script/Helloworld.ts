@@ -108,6 +108,16 @@ export default class Helloworld extends cc.Component {
 
         this.node.on("tweenData", this.receiveTweenData, this);
         this.node.on("tweenStart", this.tweenStart, this);
+        this.node.on("tweenResume", this.tweenResume, this);
+        this.node.on("tweenStop", this.tweenStop, this);
+    }
+
+    tweenResume() {
+        this.MainNode.resumeAllActions();
+    }
+
+    tweenStop() {
+        this.MainNode.pauseAllActions();
     }
 
     /**解除绑定 */
@@ -264,7 +274,7 @@ export default class Helloworld extends cc.Component {
         cc.log(this.exportDataList);
         /**解析数据 */
         /**延后 */
-        setTimeout(()=>{
+        setTimeout(() => {
             let data = this.parseExportData();
             cc.log(data)
         })
