@@ -45,6 +45,8 @@ export default class Helloworld extends cc.Component {
     AnglePre: cc.Prefab = null;
     @property(cc.Prefab)
     ColorPre: cc.Prefab = null;
+    @property(cc.Prefab)
+    ParallelPre: cc.Prefab = null;
     @property(cc.Node)
     TweenListNode: cc.Node = null;
 
@@ -544,7 +546,7 @@ export default class Helloworld extends cc.Component {
                 alert('开发中...')
                 break;
             case 'parallel':
-                alert('开发中...')
+                this.createTweenNode(this.ParallelPre);
                 break;
             case 'repeat':
                 alert('开发中...')

@@ -162,6 +162,7 @@ export default class BaseNode extends cc.Component {
             case TweenType.ANGLE: return cc.color(TypeColor.angle);
             case TweenType.COLOR: return cc.color(TypeColor.color);
             case TweenType.START: return cc.color(TypeColor.start);
+            case TweenType.PARALLEL: return cc.Color.BLUE;
                 return cc.Color.BLUE;
         }
     }

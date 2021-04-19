@@ -16,6 +16,14 @@ export default class Line extends cc.Component {
     c4: cc.Vec2 = null;
 
     color: any = '#00ff00';
+    endPos: cc.Vec2 = cc.v2();
+    startPos: cc.Vec2 = cc.v2();
+    midPos: cc.Vec2 = cc.v2();
+    midPos2: cc.Vec2 = cc.v2();
+    r: number = 0;/**半径 */
+    disX: number = 0; /**间距x */
+    /**曲线还是半圆 */
+    isCurve: boolean = true;
 
     onLoad() {
         // this.test();
@@ -62,7 +70,7 @@ export default class Line extends cc.Component {
     //     this.Graphics.stroke();
 
     //     /**绘制动态球 */
-    //     this.runCircle(0.5);
+    //     this.runCurve(0.5);
     // }
 
     setColor(color) {
@@ -108,7 +116,11 @@ export default class Line extends cc.Component {
         // this.Graphics.circle(pos.x, pos.y, 10);
         // this.Graphics.stroke();
         /**绘制动态球 */
-        this.runCircle(0.5);
+        if (this.isCurve) {
+            this.runCurve(1);
+        } else {
+            this.runCircle(1);
+        }
     }
 
     /**
@@ -117,6 +129,8 @@ export default class Line extends cc.Component {
      * @param endPos 
      */
     drawBezier(endPos, startPos) {
+        this.endPos = endPos;
+        this.startPos = startPos;
         let disX = endPos.x - startPos.x;
         let disY = endPos.y - startPos.y;
 
@@ -125,18 +139,43 @@ export default class Line extends cc.Component {
         let curveX2 = startPos.x + disX * 0.3;
         let curveY2 = startPos.y + disY * 0.875;
         if (disX < 0) {
-            curveX1 = startPos.x + Math.abs(disX) * 2;
-            curveY1 = startPos.y + disY * 0.5;
-            curveX2 = startPos.x - Math.abs(disX) * 3;
-            curveY2 = endPos.y - disY * 0.5;
+            this.isCurve = false;
+            // curveX1 = startPos.x + Math.abs(disX) * 2;
+            // curveY1 = startPos.y + disY * 0.5;
+            // curveX2 = startPos.x - Math.abs(disX) * 3;
+            // curveY2 = endPos.y - disY * 0.5;
+
+            /**中间用贝塞尔曲线,两端画半圆 */
+            let midY = disY / 2;
+            // let midX = disX / 2;
+
+            let cx1 = startPos.x;
+            let cy1 = startPos.y;
+            let cx2 = endPos.x;
+            let cy2 = endPos.y;
+            let r = Math.abs(midY / 2);
+            this.r = r;
+            this.disX = disX;
+            this.midPos = cc.v2(cx1, cy1 + midY / 2);
+            this.midPos2 = cc.v2(cx2, cy2 - midY / 2);
+            /**绘制第一个半圆 */
+            this.Graphics.arc(cx1, cy1 + midY / 2, r, 0 - Math.PI / 2, Math.PI / 2, true);
+            this.Graphics.stroke();
+            this.Graphics.moveTo(cx1, cy1 + midY);
+            this.Graphics.lineTo(cx2, cy1 + midY);
+            this.Graphics.stroke();
+            /**画第二个半圆 */
+            this.Graphics.arc(cx2, cy2 - midY / 2, r, 0 - Math.PI / 2, Math.PI / 2, false)
+            this.Graphics.stroke();
+        } else {
+            this.isCurve = true;
+            this.c1 = cc.v2(startPos);
+            this.c2 = cc.v2(curveX1, curveY1);
+            this.c3 = cc.v2(curveX2, curveY2);
+            this.c4 = cc.v2(endPos);
+
+            this.drawLine();
         }
-
-        this.c1 = cc.v2(startPos);
-        this.c2 = cc.v2(curveX1, curveY1);
-        this.c3 = cc.v2(curveX2, curveY2);
-        this.c4 = cc.v2(endPos);
-
-        this.drawLine();
     }
 
     drawLine() {
@@ -150,7 +189,8 @@ export default class Line extends cc.Component {
         this.Graphics.stroke();
     }
 
-    runCircle(time) {
+    /**路径是弧线 */
+    runCurve(time) {
         let t1 = 0;
         let arr = [];
         let len = time * 60;
@@ -163,6 +203,67 @@ export default class Line extends cc.Component {
         this.runRepeatCircle(arr);
     }
 
+    /**路径是半圆 */
+    runCircle(time) {
+        /**获取圆形的周长和直线的长度,计算各自分配的时间 */
+        let circleLen = Math.PI * this.r;
+        let lineLen = Math.abs(this.disX);
+        let circleTime = circleLen / (circleLen + lineLen) * time;
+        let lineTime = time - circleTime;
+        let halfCircleTime = circleTime / 2;
+        cc.log(lineTime, halfCircleTime)
+
+        let disY = this.endPos.y - this.startPos.y;
+        let flag;
+        if (disY > 0) {
+            flag = true;
+        }
+
+        let t1 = 0;
+        let arr = [];
+        let len = halfCircleTime * 60;
+        // len /= 3;
+        /**push 第一个半圆形路径 */
+        for (let i = 0; i < len; i++) {
+            t1 += 0.017 * 1 / halfCircleTime;
+            let position = this.halfCircle(t1, this.r, 0);
+            if (flag) { /**翻转Y */
+                position.y = -position.y
+            }
+            position = this.midPos.add(position);
+            arr.push(position);
+
+        }
+
+        /**直线路径 */
+        let position = this.startPos.add(cc.v2(0, disY / 2));
+        len = lineTime * 50;
+        t1 = 0;
+        for (let i = 0; i < len; i++) {
+            // t1 += 0.017 * 1 / lineTime;
+            let distance = Math.abs(this.disX) / len * i;
+            let pos = position.sub(cc.v2(distance, 0));
+            arr.push(pos);
+        }
+
+        len = halfCircleTime * 60;
+        t1 = 0;
+        /** 第二个半圆形路径 */
+        for (let i = 0; i < len; i++) {
+            t1 += 0.017 * 1 / halfCircleTime;
+            let position = this.halfCircle(t1, this.r, 0);
+            if (flag) { /**翻转Y */
+                position.y = -position.y
+            }
+            position.x = -position.x;/**翻转x */
+            position = this.midPos2.add(position);
+            arr.push(position)
+        }
+        cc.log(arr.length);
+        cc.log(Date.now());
+        this.runRepeatCircle(arr);
+    }
+
     runRepeatCircle(arr: Array<cc.Vec2>) {
         let len = arr.length - 1;
         let i1 = 0, i2 = 2, i3 = 4;
@@ -172,16 +273,14 @@ export default class Line extends cc.Component {
             let c3 = arr[i3];
             this.Graphics2.clear();
             if (c1) {
-                this.Graphics2.circle(c1.x, c1.y, 2);
+                this.Graphics2.circle(c1.x, c1.y, 4);
             }
             if (c2) {
-                this.Graphics2.circle(c2.x, c2.y, 4);
+                this.Graphics2.circle(c2.x, c2.y, 6);
             }
             if (c3) {
-                this.Graphics2.circle(c3.x, c3.y, 7);
+                this.Graphics2.circle(c3.x, c3.y, 8);
             }
-            this.Graphics2.stroke();
-            // this.Graphics2.fillColor = cc.color(this.color); //cc.Color.RED;
             this.Graphics2.fill();
             if (i1 >= len - 1) {
                 /**新循环 */
@@ -191,6 +290,27 @@ export default class Line extends cc.Component {
             i2++;
             i3++;
         }, 0.017, len - 1)
+    }
+
+    /**
+     * 半圆形路径 
+     * @param t 0-1
+     * @param r 
+     * @param a1 起始点弧度 -1.57
+     * @param a2 结束点弧度 1.57
+     */
+    halfCircle(t, r, flag) {
+        let curAngle = Math.PI * t;
+        let x, y;
+        if (flag) {
+            x = r * Math.cos(curAngle);
+            y = r * Math.sin(curAngle);
+        } else {
+            x = r * Math.sin(curAngle);
+            y = r * Math.cos(curAngle);
+        }
+
+        return cc.v2(x, y);
     }
 
     /**
