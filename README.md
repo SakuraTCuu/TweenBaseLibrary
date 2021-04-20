@@ -1,2 +1,6 @@
-# hello-world
-Hello world new project template.
+# 
+基于ccc2.4.3 开发的基础动画库，仿UE4 可视化编辑
+
+供 产品/UI/程序/美工 制作及预览动画，方便沟通协调
+
+2021/4/20
