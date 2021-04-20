@@ -232,7 +232,7 @@ export default class BaseOnceNode extends BaseNode {
             toPos,
             fromPos
         }
-        this.dispatchEvent('toFromInfo', data)
+        this.dispatchEvent('updatePos', data)
     }
 
     /**=================================曲线线条事件============================================== */
