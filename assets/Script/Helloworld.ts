@@ -59,7 +59,8 @@ export default class Helloworld extends cc.Component {
     LineNodeListInfo = {};
     touchType: boolean = true;
 
-    toFromInfo = {};
+    toFromInfo = {}; /**once 绑定关系 */
+    parallelInfo = {}; /**并行关系 */
     /**
      * {
         uuid, toPos, fromPos
@@ -88,12 +89,6 @@ export default class Helloworld extends cc.Component {
         this.ContentNode.setContentSize(10000, 10000);
         /**创建矢量幕布 */
         this.addEvent(this.MainNode);
-
-        // this.scheduleOnce(() => {
-        //     let t = cc.tween().to(2, { x: 400 });
-        //     let t1 = cc.tween().to(2, { x: 0 });
-        //     t.then(t1).target(this.MainNode).start();
-        // }, 2);
     }
 
     initEvent() {
@@ -112,6 +107,35 @@ export default class Helloworld extends cc.Component {
         this.node.on("tweenStart", this.tweenStart, this);
         this.node.on("tweenResume", this.tweenResume, this);
         this.node.on("tweenStop", this.tweenStop, this);
+
+        this.node.on("parallelPosInfo", this.updateParallel, this);
+    }
+
+    updateParallel(e){
+        let { uuid, toPos, fromPos } = e.getUserData();
+        this.toFromInfo[uuid] = {
+            uuid, toPos, fromPos
+        }
+
+        /**更新链接 */
+        for (let i = 0; i < this.bindInfo.length; i++) {
+            const info = this.bindInfo[i];
+            if (info.uuid_to === uuid) {
+                let pos1 = this.ContentNode.convertToNodeSpaceAR(toPos);
+                let pos2 = this.toFromInfo[info.uuid_from].fromPos; //获取另一个点的位置并更新
+                pos2 = this.ContentNode.convertToNodeSpaceAR(pos2);
+                this.LineNodeListInfo[uuid].getComponent(Line).touchStart(pos1);
+                this.LineNodeListInfo[uuid].getComponent(Line).touchEnd(true, pos2);
+            }
+
+            if (info.uuid_from === uuid) {
+                let pos3 = this.toFromInfo[info.uuid_to].toPos;
+                pos3 = this.ContentNode.convertToNodeSpaceAR(pos3);
+                let pos4 = this.ContentNode.convertToNodeSpaceAR(fromPos);
+                this.LineNodeListInfo[info.uuid_to].getComponent(Line).touchStart(pos3);
+                this.LineNodeListInfo[info.uuid_to].getComponent(Line).touchEnd(true, pos4);
+            }
+        }
     }
 
     tweenResume() {
@@ -338,7 +362,6 @@ export default class Helloworld extends cc.Component {
     endLine(e) {
         let { uuid, pos } = e.getUserData();
         //TODO 判断是否循环引用
-
         //判断是否在某个区域内
         let { flag, tarPos, tarUuid } = this.isContains(uuid, pos);
         if (flag) {
@@ -393,6 +416,10 @@ export default class Helloworld extends cc.Component {
                 }
             }
         }
+
+        /**遍历新的 */
+
+
         return { flag: false, type };
     }
 
@@ -443,20 +470,13 @@ export default class Helloworld extends cc.Component {
             this.clickPos = pos;
             this.TweenListNode.position = pos;
             this.TweenListNode.active = true;
-            /**展示List */
-            // let item = cc.instantiate(this.PositionPre);
-            // item.position = pos;
-            // item.parent = this.ContentNode;
-            // let uuid = item.getComponent(BaseNode).getUuid();
-            // this.NodeList[uuid] = item;
-            // this.addEvent(item);
         }
     }
 
     /**
-     * baseNode的事件未被拦截
-     * 因为baseNode移动后 会触发 mouse 的up down 事件,而且无法判断
-     * 那就让baseNode的事件透传过来, 然后定义一个isBaseTouchMove标识 是经由baseNode传递过来的
+     * BaseOnceNode的事件未被拦截
+     * 因为BaseOnceNode移动后 会触发 mouse 的up down 事件,而且无法判断
+     * 那就让BaseOnceNode的事件透传过来, 然后定义一个isBaseTouchMove标识 是经由BaseOnceNode传递过来的
      * 这里就可以修改touchType 来判断是否是移动背景还是生成 
      * 三个事件互不影响
      * @param event 
@@ -466,7 +486,7 @@ export default class Helloworld extends cc.Component {
         event.stopPropagation();
         let x = event.getDeltaX();
         let y = event.getDeltaY();
-        if (event['isBaseTouchMove']) { //是baseNode的移动事件,不需要处理
+        if (event['isBaseTouchMove']) { //是BaseOnceNode的移动事件,不需要处理
             return this.touchType = false;
         }
         if (event.getDelta().mag() > 10) {

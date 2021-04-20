@@ -1,10 +1,10 @@
-import BaseNode from "../base/BaseNode";
+import BaseOnceNode from "../base/BaseOnceNode";
 import { TweenType, TweenFlag } from "../base/Config";
 
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-export default class Angle extends BaseNode {
+export default class Angle extends BaseOnceNode {
 
 
     @property(cc.EditBox)
@@ -20,7 +20,6 @@ export default class Angle extends BaseNode {
     onLoad() {
         this.time = 1;
         this._tweenType = TweenType.ANGLE;
-        this.color = '#A3A613'
 
         this.tEdit.string = this.time + "";
         this.aEdit.string = this.angle + "";

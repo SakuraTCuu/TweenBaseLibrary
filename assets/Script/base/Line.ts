@@ -211,7 +211,6 @@ export default class Line extends cc.Component {
         let circleTime = circleLen / (circleLen + lineLen) * time;
         let lineTime = time - circleTime;
         let halfCircleTime = circleTime / 2;
-        cc.log(lineTime, halfCircleTime)
 
         let disY = this.endPos.y - this.startPos.y;
         let flag;
@@ -259,8 +258,6 @@ export default class Line extends cc.Component {
             position = this.midPos2.add(position);
             arr.push(position)
         }
-        cc.log(arr.length);
-        cc.log(Date.now());
         this.runRepeatCircle(arr);
     }
 

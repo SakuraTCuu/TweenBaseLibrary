@@ -3467,7 +3467,7 @@ declare namespace cc {
 	!#zh
 	Cocos Creator 场景中的所有节点类。<br/>
 	支持的节点事件，请参阅 {{#crossLink "Node.EventType"}}{{/crossLink}}。 */
-	export class Node extends _BaseNode {		
+	export class Node extends _BaseOnceNode {		
 		/** !#en
 		Group index of node.<br/>
 		Which Group this node belongs to will resolve that this node's collision components can collide with which other collision componentns.<br/>
@@ -11776,7 +11776,7 @@ declare namespace cc {
 	- define some interfaces shares between CCNode
 	- define machanisms for Enity Component Systems
 	- define prefab and serialize functions */
-	export class _BaseNode extends Object implements EventTarget {		
+	export class _BaseOnceNode extends Object implements EventTarget {		
 		/** !#en Name of node.
 		!#zh 该节点名称。 */
 		name: string;		
@@ -11924,7 +11924,7 @@ declare namespace cc {
 		});
 		``` 
 		*/
-		walk(prefunc: (target: _BaseNode) => void, postfunc: (target: _BaseNode) => void): void;		
+		walk(prefunc: (target: _BaseOnceNode) => void, postfunc: (target: _BaseOnceNode) => void): void;		
 		/**
 		!#en
 		Remove itself from its parent node. If cleanup is `true`, then also remove all events and actions. <br/>

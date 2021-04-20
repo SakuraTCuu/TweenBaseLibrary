@@ -1,3 +1,4 @@
+
 const { ccclass, property } = cc._decorator;
 
 @ccclass
@@ -19,6 +20,10 @@ export default class ParallelItem extends cc.Component {
     /**为uuid单独抽一个基类 */
     getUuid() {
         return this._uuid;
+    }
+
+    getFromPos() {
+        return this.node.convertToWorldSpaceAR(this.LineFrom.position);
     }
 
     onClickDelete() {

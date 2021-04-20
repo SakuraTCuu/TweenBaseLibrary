@@ -1,11 +1,11 @@
-import BaseNode from "../base/BaseNode";
+import BaseParallelNode from "../base/BaseParallelNode";
 import { TweenType } from "../base/Config";
 import ParallelItem from "./ParallelItem";
 
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-export default class Parallel extends BaseNode {
+export default class Parallel extends BaseParallelNode {
 
     @property(cc.Node)
     ContentNode: cc.Node = null;
@@ -17,30 +17,31 @@ export default class Parallel extends BaseNode {
 
     height: number = 0;
     originHeight: number = 0;//初始高度
-    /**应该继承BaseNode 还是? */
+
+    /**内部维护一个绑定关系, */
+
     onLoad() {
         /** */
         this.originHeight = this.node.height;
         this._tweenType = TweenType.PARALLEL;
-        this.color = '#00ff00'
         this.initEvent();
 
         this.node.on('delete', this.deleteItem, this);
     }
+
+    /**================================内部方法=================================== */
     /**删除一个item */
     deleteItem(e) {
         let { uuid } = e.getUserData();
 
         if (this.bindNodeList[uuid]) {
-            cc.log("删除一个");
-            let item = this.bindNodeList[uuid];
-            // this.bindNodeList[uuid].removeChild(item);
-            this.ContentNode.removeChild(item);
-            this.bindNodeList[uuid].destroy();
+            this.bindNodeList[uuid].removeFromParent();
             delete this.bindNodeList[uuid];
         }
         /**重新计算高度 */
         this.resetHeight();
+
+        this.sendPosition();
     }
 
     /**点击添加 */
@@ -52,6 +53,8 @@ export default class Parallel extends BaseNode {
         this.height = item.height;
         /**重新计算高度 */
         this.resetHeight();
+
+        this.sendPosition();
     }
 
     /**重置高度 */
@@ -60,5 +63,26 @@ export default class Parallel extends BaseNode {
         cc.log('reset->', count);
         let height = count * this.height;
         this.node.height = this.originHeight + height;
+    }
+
+    sendPosition() {
+        let toPos;
+        if (this.LineTo) {
+            toPos = this.node.convertToWorldSpaceAR(this.LineTo.position);
+        }
+
+        let arr = [];
+        for (let i = 0; i < this.ContentNode.childrenCount; i++) {
+            const item = this.ContentNode.children[i];
+            let pos = item.getComponent(ParallelItem).getFromPos();
+            arr.push(pos);
+        }
+
+        let data = {
+            uuid: this._uuid,
+            toPos,
+            fromPos: arr
+        }
+        this.dispatchEvent('parallelPosInfo', data)
     }
 }

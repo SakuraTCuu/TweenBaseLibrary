@@ -1,10 +1,10 @@
-import BaseNode from "../base/BaseNode";
+import BaseOnceNode from "../base/BaseOnceNode";
 import { TweenFlag, TweenType } from "../base/Config";
 
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-export default class Scale extends BaseNode {
+export default class Scale extends BaseOnceNode {
 
     @property(cc.EditBox)
     tEdit: cc.EditBox = null;
@@ -23,7 +23,6 @@ export default class Scale extends BaseNode {
     onLoad() {
         this.time = 1;
         this._tweenType = TweenType.SCALE;
-        this.color = '#0000ff'
 
         this.tEdit.string = this.time + "";
         this.xEdit.string = this.x + "";
