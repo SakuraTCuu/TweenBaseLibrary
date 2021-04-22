@@ -1,7 +1,7 @@
 import BaseNode from "./BaseNode";
 import { EasingType, TweenFlag, TweenType } from "./Config";
 
-const {ccclass, property} = cc._decorator;
+const { ccclass, property } = cc._decorator;
 
 @ccclass
 export default class BaseTween extends BaseNode {
@@ -31,12 +31,29 @@ export default class BaseTween extends BaseNode {
         this._time = value;
     }
 
+    _exportData: {} = {};
+
     onLoad() {
 
     }
 
-    returnData(){
-        
+    start() {
+        this.sendTweenData();
+    }
+
+    sendTweenData() {
+        let tween = this.returnData();
+
+        let data = {
+            uuid: this.uuid,
+            tween,
+            tweenData: this._exportData
+        }
+        this.dispatchEvent('changeData', data);
+    }
+
+    returnData() {
+
     }
 
 }

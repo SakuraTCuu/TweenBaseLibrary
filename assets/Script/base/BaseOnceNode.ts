@@ -303,7 +303,9 @@ export default class BaseOnceNode extends BaseNode {
     sendTweenData(isCustom?, targetName?) {
         targetName = targetName || "tweenData";
 
-        let tweenData = this.getStandardTween(this.returnData());
+        let tween = this.returnData();
+        cc.log(tween);
+        let tweenData = this.getStandardTween(tween);
         let exportData = this._exportData;
 
         if (!isCustom) {

@@ -57,6 +57,13 @@ export default class Helloworld extends cc.Component {
         let uuid = item.getComponent(BaseNode).getUuid();
         this.NodeList[uuid] = item;
         this.addEvent(item);
+
+        // let result = [cc.tween().to(2, { scale: 2 }), cc.tween().by(2, { angle: 180 })]
+        // let t1 = cc.tween().by(2, { scale: 2 });
+        // let t2 = cc.tween().by(2, { angle: 180 })
+        // let t3 = cc.tween().to(2, { opacity: 0 })
+        // let t4 = cc.tween().by(2, { angle: -180 })
+        // cc.tween(this.MainNode).delay(0).parallel(t1, t2).parallel(t3, t4).start();
     }
 
     initView() {
@@ -273,8 +280,8 @@ export default class Helloworld extends cc.Component {
             // this.TweenListNode.position = pos;
             // this.TweenListNode.active = true;
             let contentItem = cc.instantiate(this.ContentPrefab);
-            contentItem.parent = this.ContentNode;
             contentItem.position = pos;
+            contentItem.parent = this.ContentNode;
             let uuid = contentItem.getComponent(BaseNode).getUuid();
             this.NodeList[uuid] = contentItem;
             this.addEvent(contentItem);

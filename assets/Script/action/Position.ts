@@ -42,12 +42,8 @@ export default class Position extends BaseTween {
                 this.time = Number(event.string);
                 break;
         }
-        // this.sendTweenData(0);
-        let result = {
-            time: this.time,
-            position: cc.v2(this.x, this.y)
-        }
-        this.dispatchEvent('changeData', result);
+        this.sendTweenData();
+
     }
 
     /**怎么返回tween? */
@@ -67,11 +63,14 @@ export default class Position extends BaseTween {
     }
 
     exportData() {
-        // Object.assign(this._exportData, {
-        //     tweenData: {
-        //         time: this.time,
-        //         position: cc.v2(this.x, this.y)
-        //     }
-        // })
+        Object.assign(this._exportData, {
+            easingType: this._easingType,
+            tweenFlag: this._tweenFlag,
+            tweenType: this._tweenType,
+            data: {
+                time: this.time,
+                position: { x: this.x, y: this.y }
+            }
+        })
     }
 }

@@ -124,6 +124,12 @@ export default class PointManager extends cc.Component {
 
     updatePos(e) {
         let { uuid, toPos, fromPos } = e.getUserData();
+        // if (toPos) {
+        //     cc.log("to:", toPos.x, toPos.y);
+        // }
+        // if (fromPos) {
+        //     cc.log("from:", fromPos.x, fromPos.y);
+        // }
         this.pointInfo[uuid] = {
             uuid, toPos, fromPos
         }

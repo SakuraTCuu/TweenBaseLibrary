@@ -61,6 +61,7 @@ export default class BaseNode extends cc.Component {
 
     /**send event */
     dispatchEvent(name, data) {
+        // cc.log('event: ', this._uuid, name, data)
         let event = new cc.Event.EventCustom(name, true);
         event.detail = data;
         this.node.dispatchEvent(event);

@@ -34,7 +34,7 @@ export default class Color extends BaseTween {
                 break;
         }
 
-        // this.sendTweenData(0);
+        this.sendTweenData();
     }
 
     /**怎么返回tween? */
@@ -59,5 +59,14 @@ export default class Color extends BaseTween {
         //         color: this.c,
         //     }
         // })
+        Object.assign(this._exportData, {
+            easingType: this._easingType,
+            tweenFlag: this._tweenFlag,
+            tweenType: this._tweenType,
+            data: {
+                time: this.time,
+                color: this.c,
+            }
+        })
     }
 }
