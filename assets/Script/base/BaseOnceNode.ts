@@ -300,7 +300,7 @@ export default class BaseOnceNode extends BaseNode {
         }
     }
 
-    sendTweenData(isCustom, targetName?) {
+    sendTweenData(isCustom?, targetName?) {
         targetName = targetName || "tweenData";
 
         let tweenData = this.getStandardTween(this.returnData());

@@ -1,10 +1,10 @@
-import BaseOnceNode from "../base/BaseOnceNode";
+import BaseTween from "../base/BaseTween";
 import { TweenFlag, TweenType } from "../base/Config";
 
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-export default class Scale extends BaseOnceNode {
+export default class Scale extends BaseTween {
 
     @property(cc.EditBox)
     tEdit: cc.EditBox = null;
@@ -27,7 +27,6 @@ export default class Scale extends BaseOnceNode {
         this.tEdit.string = this.time + "";
         this.xEdit.string = this.x + "";
         this.yEdit.string = this.y + "";
-        this.initEvent();
     }
 
     onChangeEnd(event, data) {
@@ -43,7 +42,7 @@ export default class Scale extends BaseOnceNode {
                 break;
         }
 
-        this.sendTweenData(0);
+        // this.sendTweenData(0);
     }
 
     /**怎么返回tween? */
@@ -65,13 +64,13 @@ export default class Scale extends BaseOnceNode {
     }
 
     exportData() {
-        Object.assign(this._exportData, {
-            tweenData: {
-                time: this.time,
-                scaleX: this.x,
-                scaleY: this.y,
-                scale: { x: this.x, y: this.y }
-            }
-        })
+        // Object.assign(this._exportData, {
+        //     tweenData: {
+        //         time: this.time,
+        //         scaleX: this.x,
+        //         scaleY: this.y,
+        //         scale: { x: this.x, y: this.y }
+        //     }
+        // })
     }
 }

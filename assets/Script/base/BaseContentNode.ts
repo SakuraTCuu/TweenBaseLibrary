@@ -1,11 +1,11 @@
-import BaseParallelNode from "../base/BaseParallelNode";
+import BaseOnceNode from "../base/BaseOnceNode";
 import { TweenType } from "../base/Config";
-import ParallelItem from "./ParallelItem";
+import BaseTween from "./BaseTween";
 
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-export default class Parallel extends BaseParallelNode {
+export default class BaseContentNode extends BaseOnceNode {
 
     @property(cc.Node)
     ContentNode: cc.Node = null;
@@ -18,15 +18,30 @@ export default class Parallel extends BaseParallelNode {
     height: number = 0;
     originHeight: number = 0;//初始高度
 
-    /**内部维护一个绑定关系, */
-
     onLoad() {
-        /** */
         this.originHeight = this.node.height;
         this._tweenType = TweenType.PARALLEL;
         this.initEvent();
 
         this.node.on('delete', this.deleteItem, this);
+
+        this.node.on('changeData', this.changeData, this);
+    }
+
+    changeData(e) {
+        let data = e.getUserData();
+        cc.log(data);
+        this.returnData();
+    }
+
+    returnData() {
+        /**从子节点获取数据,封装数据 */
+        this.bindNodeList.forEach((item) => {
+            let data = item.getComponent(BaseTween).returnData();
+            cc.log(data);
+        })
+
+        return cc.tween();
     }
 
     /**================================内部方法=================================== */
@@ -41,6 +56,7 @@ export default class Parallel extends BaseParallelNode {
         /**重新计算高度 */
         this.resetHeight();
 
+        this.sendTweenData();
         this.sendPosition();
     }
 
@@ -48,12 +64,13 @@ export default class Parallel extends BaseParallelNode {
     onClickAdd() {
         let item = cc.instantiate(this.ItemPrefab);
         item.parent = this.ContentNode;
-        let uuid = item.getComponent(ParallelItem).getUuid();
+        let uuid = item.getComponent(BaseTween).getUuid();
         this.bindNodeList[uuid] = item;
-        this.height = item.height;
+        this.height = item.height + 10;
         /**重新计算高度 */
         this.resetHeight();
 
+        this.sendTweenData();
         this.sendPosition();
     }
 
@@ -63,26 +80,5 @@ export default class Parallel extends BaseParallelNode {
         cc.log('reset->', count);
         let height = count * this.height;
         this.node.height = this.originHeight + height;
-    }
-
-    sendPosition() {
-        let toPos;
-        if (this.LineTo) {
-            toPos = this.node.convertToWorldSpaceAR(this.LineTo.position);
-        }
-
-        let arr = [];
-        for (let i = 0; i < this.ContentNode.childrenCount; i++) {
-            const item = this.ContentNode.children[i];
-            let pos = item.getComponent(ParallelItem).getFromPos();
-            arr.push(pos);
-        }
-
-        let data = {
-            uuid: this._uuid,
-            toPos,
-            fromPos: arr
-        }
-        this.dispatchEvent('parallelPosInfo', data)
     }
 }

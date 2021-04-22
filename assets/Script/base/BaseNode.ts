@@ -19,11 +19,13 @@ export default class BaseNode extends cc.Component {
     protected _uuid: string = Date.now() + "";//随机生成uuid 作为唯一标识 TODO Temp
 
     onLoad() {
-       
+
     }
 
-    start(){
-        this.UuidLabel.string = this._uuid + "   " + this.getNodeType();
+    start() {
+        if (this.UuidLabel) {
+            this.UuidLabel.string = this._uuid + "   " + this.getNodeType();
+        }
         this.node.color = this.getNodeColor();
     }
 

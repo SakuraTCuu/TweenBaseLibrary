@@ -1,18 +1,6 @@
 import BaseNode from "./base/BaseNode";
-import Line from "./base/Line";
 
 const { ccclass, property } = cc._decorator;
-
-interface linkList {
-    pre: string,
-    cur: string,
-    next: string
-}
-function linkList(pre, cur, next) {
-    this.pre = pre;
-    this.cur = cur;
-    this.next = next;
-}
 
 @ccclass
 export default class Helloworld extends cc.Component {
@@ -30,6 +18,9 @@ export default class Helloworld extends cc.Component {
     ContentNode: cc.Node = null;
 
     @property(cc.Prefab)
+    ContentPrefab: cc.Prefab = null;
+
+    @property(cc.Prefab)
     StartPre: cc.Prefab = null;
 
     @property(cc.Prefab)
@@ -45,8 +36,6 @@ export default class Helloworld extends cc.Component {
     AnglePre: cc.Prefab = null;
     @property(cc.Prefab)
     ColorPre: cc.Prefab = null;
-    @property(cc.Prefab)
-    ParallelPre: cc.Prefab = null;
     @property(cc.Node)
     TweenListNode: cc.Node = null;
 
@@ -280,9 +269,15 @@ export default class Helloworld extends cc.Component {
         if (this.touchType && event.getButton() === cc.Event.EventMouse.BUTTON_RIGHT) {
             let pos = event.getLocation();
             pos = this.ContentNode.convertToNodeSpaceAR(pos);
-            this.clickPos = pos;
-            this.TweenListNode.position = pos;
-            this.TweenListNode.active = true;
+            // this.clickPos = pos;
+            // this.TweenListNode.position = pos;
+            // this.TweenListNode.active = true;
+            let contentItem = cc.instantiate(this.ContentPrefab);
+            contentItem.parent = this.ContentNode;
+            contentItem.position = pos;
+            let uuid = contentItem.getComponent(BaseNode).getUuid();
+            this.NodeList[uuid] = contentItem;
+            this.addEvent(contentItem);
         }
     }
 
@@ -370,7 +365,7 @@ export default class Helloworld extends cc.Component {
                 alert('开发中...')
                 break;
             case 'parallel':
-                this.createTweenNode(this.ParallelPre);
+                alert('开发中...')
                 break;
             case 'repeat':
                 alert('开发中...')

@@ -13,7 +13,6 @@ export default class PointManager extends cc.Component {
     pointInfo = {}; /**绑定关系 */
     bindInfo = [];
 
-
     onLoad() {
         this.node.on("LineEnd", this.endLine, this);
         this.node.on("updatePos", this.updatePos, this);
@@ -114,7 +113,9 @@ export default class PointManager extends cc.Component {
             this.node.emit('bindSuc', data);
         }
 
-        tarPos = this.ContentNode.convertToNodeSpaceAR(tarPos);
+        if (tarPos) {
+            tarPos = this.ContentNode.convertToNodeSpaceAR(tarPos);
+        }
         let data = {
             uuid, pos, flag, tarPos, tarUuid
         }

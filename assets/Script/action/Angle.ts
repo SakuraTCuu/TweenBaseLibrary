@@ -1,11 +1,10 @@
-import BaseOnceNode from "../base/BaseOnceNode";
+import BaseTween from "../base/BaseTween";
 import { TweenType, TweenFlag } from "../base/Config";
 
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-export default class Angle extends BaseOnceNode {
-
+export default class Angle extends BaseTween {
 
     @property(cc.EditBox)
     tEdit: cc.EditBox = null;
@@ -23,7 +22,6 @@ export default class Angle extends BaseOnceNode {
 
         this.tEdit.string = this.time + "";
         this.aEdit.string = this.angle + "";
-        this.initEvent();
     }
 
     onChangeEnd(event, data) {
@@ -36,7 +34,7 @@ export default class Angle extends BaseOnceNode {
                 break;
         }
 
-        this.sendTweenData(0);
+        // this.sendTweenData(0);
     }
 
     /**怎么返回tween? */
@@ -56,11 +54,11 @@ export default class Angle extends BaseOnceNode {
     }
 
     exportData() {
-        Object.assign(this._exportData, {
-            tweenData: {
-                time: this.time,
-                angle: this.angle,
-            }
-        })
+        // Object.assign(this._exportData, {
+        //     tweenData: {
+        //         time: this.time,
+        //         angle: this.angle,
+        //     }
+        // })
     }
 }
