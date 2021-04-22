@@ -282,7 +282,7 @@ export default class BaseOnceNode extends BaseNode {
         /**判断是否有接触目标区域 */
         let data = {
             uuid: this._uuid,
-            pos: pos,
+            pos,
         }
         this.dispatchEvent('LineEnd', data)
     }

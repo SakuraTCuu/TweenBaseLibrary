@@ -68,6 +68,13 @@ export default class Helloworld extends cc.Component {
         let uuid = item.getComponent(BaseNode).getUuid();
         this.NodeList[uuid] = item;
         this.addEvent(item);
+
+        // let parallelItem = cc.instantiate(this.ParallelPre);
+        // parallelItem.position = cc.v3(0, 0);
+        // parallelItem.parent = this.ContentNode;
+        // let uuid2 = item.getComponent(BaseNode).getUuid();
+        // this.NodeList[uuid2] = parallelItem;
+        // this.addEvent(parallelItem);
     }
 
     initView() {

@@ -11,14 +11,24 @@ export default class PointManager extends cc.Component {
     ContentNode: cc.Node = null;
 
     pointInfo = {}; /**绑定关系 */
+    parallelPosInfo = {};
     bindInfo = [];
-
+    parallelBindInfo = {};
 
     onLoad() {
         this.node.on("LineEnd", this.endLine, this);
         this.node.on("updatePos", this.updatePos, this);
         this.node.on("updatePosMove", this.updatePosMove, this);
         this.node.on("LineUnbind", this.unBindLine, this);
+        this.node.on("parallelPosInfo", this.parallelLogic, this);
+    }
+
+    parallelLogic(e) {
+        let { uuid, toPos, fromPos } = e.getUserData();
+
+        this.parallelPosInfo[uuid] = {
+            uuid, toPos, fromPos
+        }
     }
 
     /**解除绑定 */
@@ -70,8 +80,9 @@ export default class PointManager extends cc.Component {
     }
 
     isContains(uuid: string, pos: cc.Vec2) {
+        cc.log(pos.x, pos.y);
         let keys = Object.keys(this.pointInfo);
-        let type;
+        let type, flag;
         for (const key in keys) {
             if (Object.prototype.hasOwnProperty.call(this.pointInfo, keys[key])) {
                 const info = this.pointInfo[keys[key]];
@@ -99,7 +110,46 @@ export default class PointManager extends cc.Component {
             }
         }
 
-        return { flag: false, type };
+        /**判断 parallelPosInfo 是否有 */
+        keys = Object.keys(this.parallelPosInfo);
+        for (const key in keys) {
+            if (Object.prototype.hasOwnProperty.call(this.parallelPosInfo, keys[key])) {
+                const info = this.parallelPosInfo[keys[key]];
+                if (info.uuid === uuid) {
+                    continue;
+                };
+                let array = info.fromPos as Array<cc.Vec2>;
+                for (let index = 0; index < array.length; index++) {
+                    const point = array[index];
+                    // cc.log(point.x, point.y);
+                    let rect = cc.rect(point.x - 10, point.y - 10, 20, 20);
+                    cc.log(point.x - 10, point.y - 10);
+                    if (rect.contains(pos)) {
+                        //判断是否已经存在了
+                        this.bindInfo.forEach((item) => {
+                            if (item.uuid_from === info.uuid) {
+                                flag = true;
+                                type = 'repeat';
+                            }
+                        })
+                        if (!flag) {
+                            this.bindInfo.push({
+                                uuid_to: uuid,
+                                uuid_from: info.uuid,
+                            });
+                        } else {
+                            this.bindInfo.push({
+                                isParallel: true,
+                                uuid_to: uuid,
+                                uuid_from: info.uuid,
+                            });
+                        }
+                        return { flag: true, tarPos: point, tarUuid: info.uuid };
+                    }
+                }
+            }
+        }
+        return { flag, type };
     }
 
 
@@ -113,8 +163,9 @@ export default class PointManager extends cc.Component {
             }
             this.node.emit('bindSuc', data);
         }
-
-        tarPos = this.ContentNode.convertToNodeSpaceAR(tarPos);
+        if (tarPos) {
+            tarPos = this.ContentNode.convertToNodeSpaceAR(tarPos);
+        }
         let data = {
             uuid, pos, flag, tarPos, tarUuid
         }

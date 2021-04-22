@@ -1,3 +1,4 @@
+import ParallelItem from "../action/ParallelItem";
 import BaseNode from "./BaseNode";
 import { TweenType, EasingType, TweenFlag, TypeColor } from "./Config";
 
@@ -12,7 +13,13 @@ const { ccclass, property } = cc._decorator;
 export default class BaseParallelNode extends BaseNode {
 
     @property(cc.Node)
+    ContentNode: cc.Node = null;
+    
+    @property(cc.Node)
     LineTo: cc.Node = null;
+
+    @property(cc.Prefab)
+    ItemPrefab: cc.Prefab = null;
 
     protected _tweenType: TweenType = TweenType.PARALLEL;/**type类型，用于标识是何种类型 */
     public get tweenType() {
@@ -28,9 +35,78 @@ export default class BaseParallelNode extends BaseNode {
     protected _uuid: string = Date.now() + "";//随机生成uuid 作为唯一标识 TODO Temp
     protected _toUuid: string = "";  //右边节点  to
     protected _fromUuid = []; //左边节点 接收
+    bindNodeList: Array<cc.Node> = [];
+
+    height: number = 0;
+    originHeight: number = 0;//初始高度
 
     onLoad() {
+        /** */
+        this.originHeight = this.node.height;
+        this._tweenType = TweenType.PARALLEL;
+        this.initEvent();
 
+        this.node.on('delete', this.deleteItem, this);
+    }
+
+     /**================================内部方法=================================== */
+    /**删除一个item */
+    deleteItem(e) {
+        let { uuid } = e.getUserData();
+
+        if (this.bindNodeList[uuid]) {
+            this.bindNodeList[uuid].removeFromParent();
+            delete this.bindNodeList[uuid];
+        }
+        /**重新计算高度 */
+        this.resetHeight();
+
+        this.sendPosition();
+    }
+
+    /**点击添加 */
+    onClickAdd() {
+        let item = cc.instantiate(this.ItemPrefab);
+        item.parent = this.ContentNode;
+        let uuid = item.getComponent(ParallelItem).getUuid();
+        this.bindNodeList[uuid] = item;
+        this.height = item.height;
+        /**重新计算高度 */
+        this.resetHeight();
+
+        this.scheduleOnce(() => {
+            this.sendPosition();
+        }, 0.1);
+    }
+
+    /**重置高度 */
+    resetHeight() {
+        let count = this.ContentNode.childrenCount;
+        cc.log('reset->', count);
+        let height = count * this.height;
+        this.node.height = this.originHeight + height;
+    }
+
+    sendPosition() {
+        let toPos;
+        if (this.LineTo) {
+            toPos = this.node.convertToWorldSpaceAR(this.LineTo.position);
+        }
+
+        let arr = [];
+        for (let i = 0; i < this.ContentNode.childrenCount; i++) {
+            const item = this.ContentNode.children[i];
+            let pos = item.getComponent(ParallelItem).getFromPos();
+            arr.push(cc.v2(pos));
+        }
+
+        let data = {
+            uuid: this._uuid,
+            toPos,
+            fromPos: arr
+        }
+        this.dispatchEvent('parallelPosInfo', data)
+        this.dispatchEvent('updatePos', data)
     }
 
     getUuid() {
@@ -111,22 +187,6 @@ export default class BaseParallelNode extends BaseNode {
     touchEnd() {
         event.stopPropagation();
         this.sendPosition();
-    }
-
-    sendPosition() {
-        let toPos, fromPos;
-        if (this.LineTo) {
-            toPos = this.node.convertToWorldSpaceAR(this.LineTo.position);
-        }
-
-        fromPos = new Array().concat(this._fromUuid);
-
-        let data = {
-            uuid: this._uuid,
-            toPos,
-            fromPos
-        }
-        this.dispatchEvent('updatePos', data)
     }
 
     /**=================================曲线线条事件============================================== */

@@ -781,7 +781,7 @@
       "__id__": 1
     },
     "component": "",
-    "_componentId": "06c6ektE0JLTLXGmG4o6XQT",
+    "_componentId": "b32e7gIbktKe4ErnIWMwwOC",
     "handler": "onClickAdd",
     "customEventData": ""
   },
@@ -1209,7 +1209,7 @@
     "_id": ""
   },
   {
-    "__type__": "06c6ektE0JLTLXGmG4o6XQT",
+    "__type__": "b32e7gIbktKe4ErnIWMwwOC",
     "_name": "",
     "_objFlags": 0,
     "node": {
@@ -1219,11 +1219,11 @@
     "UuidLabel": {
       "__id__": 30
     },
-    "LineTo": {
-      "__id__": 22
-    },
     "ContentNode": {
       "__id__": 6
+    },
+    "LineTo": {
+      "__id__": 22
     },
     "ItemPrefab": {
       "__uuid__": "77a5b88c-c282-4341-b850-29f8a151d40d"

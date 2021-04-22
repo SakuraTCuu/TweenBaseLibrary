@@ -33,6 +33,7 @@ export default class LineManager extends cc.Component {
         LineNode.getComponent(Line).touchStart(pos);
         LineNode.getComponent(Line).setColor(color);
         LineNode.parent = this.ContentNode;
+        LineNode.zIndex = 100;
         this.LineNodeListInfo[uuid] = LineNode;
     }
 
