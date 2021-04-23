@@ -51,19 +51,13 @@ export default class Helloworld extends cc.Component {
     }
 
     start() {
+        this.TweenListNode.zIndex = 999;
         let item = cc.instantiate(this.StartPre);
         item.position = cc.v3(500, 200);
         item.parent = this.ContentNode;
         let uuid = item.getComponent(BaseNode).getUuid();
         this.NodeList[uuid] = item;
         this.addEvent(item);
-
-        // let result = [cc.tween().to(2, { scale: 2 }), cc.tween().by(2, { angle: 180 })]
-        // let t1 = cc.tween().by(2, { scale: 2 });
-        // let t2 = cc.tween().by(2, { angle: 180 })
-        // let t3 = cc.tween().to(2, { opacity: 0 })
-        // let t4 = cc.tween().by(2, { angle: -180 })
-        // cc.tween(this.MainNode).delay(0).parallel(t1, t2).parallel(t3, t4).start();
     }
 
     initView() {
@@ -80,6 +74,8 @@ export default class Helloworld extends cc.Component {
 
         this.node.on('bindSuc', this.bindSuc, this)
         this.node.on("unBindLine2", this.unBindLine, this);
+
+        this.node.on("showSelect", this.showSelect, this);
 
         this.node.on("tweenData", this.receiveTweenData, this);
         this.node.on("tweenStart", this.tweenStart, this);
@@ -271,6 +267,14 @@ export default class Helloworld extends cc.Component {
         cc.log(this.MainCamera.zoomRatio);
     }
 
+    showSelect(e) {
+        let { pos, hook_cb } = e.getUserData();
+        pos = this.ContentNode.convertToNodeSpaceAR(pos);
+        this.TweenListNode.position = pos;
+        this.TweenListNode.active = true;
+        this.TweenListNode['$methods'] = hook_cb;
+    }
+
     onMouseUp(event) {
         event.stopPropagation();
         if (this.touchType && event.getButton() === cc.Event.EventMouse.BUTTON_RIGHT) {
@@ -341,13 +345,14 @@ export default class Helloworld extends cc.Component {
 
     /**创建一个tween节点 */
     createTweenNode(prefab: cc.Prefab) {
-        let pos = this.clickPos;
-        let item = cc.instantiate(prefab);
-        item.position = pos;
-        item.parent = this.ContentNode;
-        let uuid = item.getComponent(BaseNode).getUuid();
-        this.NodeList[uuid] = item;
-        this.addEvent(item);
+        // let pos = this.clickPos;
+        // let item = cc.instantiate(prefab);
+        // item.position = pos;
+        // item.parent = this.ContentNode;
+        // let uuid = item.getComponent(BaseNode).getUuid();
+        // this.NodeList[uuid] = item;
+        // this.addEvent(item);
+        this.TweenListNode['$methods'] && this.TweenListNode['$methods'](prefab);
     }
 
     onClickTweenList(event, type) {

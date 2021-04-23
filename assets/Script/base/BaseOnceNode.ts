@@ -37,8 +37,6 @@ export default class BaseOnceNode extends BaseNode {
 
     protected _exportData = {};
     protected _preTween: cc.Tween = null; //上级传过来的tween
-    protected _preData: [] = []; //上级传过来的tween 数据
-    protected _isBind: boolean = true;
     protected _uuid: string = Date.now() + "";//随机生成uuid 作为唯一标识 TODO Temp
     protected _toUuid: string = "";  //右边节点  to
     protected _fromUuid: string = ""; //左边节点 接收
@@ -102,11 +100,6 @@ export default class BaseOnceNode extends BaseNode {
         this.LineTo && (this.LineTo.color = this.node.color);
         this.LineFrom && (this.LineFrom.color = this.node.color);
         this.Effect && (this.Effect.node.color = cc.Color.WHITE);
-        Object.assign(this._exportData, {
-            easingType: this.easingType,
-            isRelative: this.tweenFlag,
-            tweenType: this.tweenType,
-        });
     }
 
     /** 每一个继承自此基类的组件都向main派发事件
@@ -349,6 +342,7 @@ export default class BaseOnceNode extends BaseNode {
     getStartTween() { /**开始动画前插入一个回调 */
         if (!this.export) {
             return cc.tween().call(() => {
+                cc.log("startTween");
                 this.startEffect();
             }).clone();
         }
@@ -367,6 +361,7 @@ export default class BaseOnceNode extends BaseNode {
         if (!this.Effect) {
             return;
         }
+        cc.log("startEffect", this.time);
         // this.node.color = cc.Color.RED;
         this.Effect.node.active = true;
         this.Effect.node.opacity = 200;

@@ -53,12 +53,6 @@ export default class Color extends BaseTween {
         return tween;
     }
     exportData() {
-        // Object.assign(this._exportData, {
-        //     tweenData: {
-        //         time: this.time,
-        //         color: this.c,
-        //     }
-        // })
         Object.assign(this._exportData, {
             easingType: this._easingType,
             tweenFlag: this._tweenFlag,

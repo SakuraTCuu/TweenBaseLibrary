@@ -64,13 +64,14 @@ export default class Scale extends BaseTween {
     }
 
     exportData() {
-        // Object.assign(this._exportData, {
-        //     tweenData: {
-        //         time: this.time,
-        //         scaleX: this.x,
-        //         scaleY: this.y,
-        //         scale: { x: this.x, y: this.y }
-        //     }
-        // })
+        Object.assign(this._exportData, {
+            easingType: this._easingType,
+            tweenFlag: this._tweenFlag,
+            tweenType: this._tweenType,
+            data: {
+                time: this.time,
+                scale: { x: this.x, y: this.y }
+            }
+        })
     }
 }

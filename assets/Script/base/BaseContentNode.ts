@@ -22,7 +22,7 @@ export default class BaseContentNode extends BaseOnceNode {
     height: number = 0;
     originHeight: number = 0;//初始高度
 
-    returnTween
+    returnTween: cc.Tween = cc.tween();
 
     onLoad() {
         this.originHeight = this.node.height;
@@ -39,29 +39,38 @@ export default class BaseContentNode extends BaseOnceNode {
 
         this.parallelData[uuid] = { tweenData, tween };
 
-        let newTween: cc.Tween<cc.Node> = cc.tween();
-
-        let result: Array<cc.Tween<cc.Node>> = new Array();
-        // let result = {};
+        let time = 0;
+        let newTween = cc.tween();
+        let resultTween: Array<cc.Tween<cc.Node>> = new Array();
+        let resultData: Array<any> = new Array();
         let keys = Object.keys(this.parallelData);
         for (const key in keys) {
             if (Object.prototype.hasOwnProperty.call(this.parallelData, keys[key])) {
                 let { tweenData, tween } = this.parallelData[keys[key]];
-                result.push(tween);
-                // result[tween] = tween;
+                if (tweenData.data.time > time) {
+                    time = tweenData.data.time;
+                }
+                resultTween.push(tween);
+                resultData.push(tweenData);
             }
         }
 
-        if (result.length === 1) {
-            newTween.then(result[0]);
-        } else if (result.length > 1) {
+        this.time = time;
+        cc.log('time', this.time);
+        if (resultTween.length === 1) {
+            newTween.then(resultTween[0]);
+        } else if (resultTween.length > 1) {
             //@ts-ignore  傻逼
-            newTween.parallel(...result);
+            newTween.parallel(...resultTween);
         }
+
+        Object.assign(this._exportData, {
+            tweenType: this._tweenType,
+            data: resultData
+        })
+
         this.returnTween = newTween.clone();
-        // this.returnTween.target(this.node).start();
-        // newTween.parallel()
-        cc.log(result);
+        this.sendTweenData();
     }
 
     returnData() {
@@ -88,21 +97,25 @@ export default class BaseContentNode extends BaseOnceNode {
     isFirst;
     /**点击添加 */
     onClickAdd() {
-        let item;
-        if (this.isFirst) {
-            item = cc.instantiate(this.Item2Prefab);
-        } else {
-            item = cc.instantiate(this.ItemPrefab);
-            this.isFirst = true;
+        let pos = this.node.convertToWorldSpaceAR(this.node.position);
+        pos.x += this.node.width / 2;
+        let data = {
+            pos,
+            hook_cb: (prefab) => {
+                cc.log("prefab", prefab)
+                if (prefab) {
+                    let item = cc.instantiate(prefab);
+                    item.parent = this.ContentNode;
+                    let uuid = item.getComponent(BaseTween).getUuid();
+                    this.bindNodeList[uuid] = item;
+                    this.height = item.height + 10;
+                    /**重新计算高度 */
+                    this.resetHeight();
+                    this.sendPosition();
+                }
+            }
         }
-        item.parent = this.ContentNode;
-        let uuid = item.getComponent(BaseTween).getUuid();
-        this.bindNodeList[uuid] = item;
-        this.height = item.height + 10;
-        /**重新计算高度 */
-        this.resetHeight();
-
-        this.sendPosition();
+        this.dispatchEvent('showSelect', data);
     }
 
     /**重置高度 */

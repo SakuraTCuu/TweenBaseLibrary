@@ -38,7 +38,7 @@ export default class Alpha extends BaseTween {
             time: this.time,
             alpha: this.alpha,
         }
-        
+
         this.dispatchEvent('changeData', result);
     }
 
@@ -59,11 +59,14 @@ export default class Alpha extends BaseTween {
     }
 
     exportData() {
-        // Object.assign(this._exportData, {
-        //     tweenData: {
-        //         time: this.time,
-        //         alpha: this.alpha,
-        //     }
-        // })
+        Object.assign(this._exportData, {
+            easingType: this._easingType,
+            tweenFlag: this._tweenFlag,
+            tweenType: this._tweenType,
+            data: {
+                time: this.time,
+                alpha: this.alpha,
+            }
+        })
     }
 }

@@ -54,11 +54,14 @@ export default class Angle extends BaseTween {
     }
 
     exportData() {
-        // Object.assign(this._exportData, {
-        //     tweenData: {
-        //         time: this.time,
-        //         angle: this.angle,
-        //     }
-        // })
+        Object.assign(this._exportData, {
+            easingType: this._easingType,
+            tweenFlag: this._tweenFlag,
+            tweenType: this._tweenType,
+            data: {
+                time: this.time,
+                angle: this.angle,
+            }
+        })
     }
 }
