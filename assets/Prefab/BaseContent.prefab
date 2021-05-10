@@ -54,9 +54,9 @@
     "_opacity": 255,
     "_color": {
       "__type__": "cc.Color",
-      "r": 133,
-      "g": 125,
-      "b": 125,
+      "r": 253,
+      "g": 223,
+      "b": 112,
       "a": 255
     },
     "_contentSize": {
@@ -812,8 +812,8 @@
     "_N$startAxis": 0,
     "_N$paddingLeft": 0,
     "_N$paddingRight": 0,
-    "_N$paddingTop": 10,
-    "_N$paddingBottom": 10,
+    "_N$paddingTop": 0,
+    "_N$paddingBottom": 0,
     "_N$spacingX": 0,
     "_N$spacingY": 0,
     "_N$verticalDirection": 1,
@@ -871,14 +871,14 @@
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
-      "x": 0.5,
+      "x": 1,
       "y": 0.5
     },
     "_trs": {
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        0,
+        40,
         -65,
         0,
         0,
@@ -949,7 +949,7 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        0,
+        -40,
         0,
         0,
         0,
@@ -1341,11 +1341,11 @@
     "ContentNode": {
       "__id__": 20
     },
-    "ItemPrefab": {
-      "__uuid__": "634065dc-ffb0-423b-9210-3162273ac5ec"
+    "AddBtn": {
+      "__id__": 23
     },
-    "Item2Prefab": {
-      "__uuid__": "3cadb5b8-1194-4a13-a4df-542484ef3dd6"
+    "TweenListPrefab": {
+      "__uuid__": "a603133d-4f9a-4d2b-8996-d77409f20e70"
     },
     "_id": ""
   },

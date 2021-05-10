@@ -14,8 +14,6 @@ export default class Color extends BaseTween {
 
     c: any = '#ff0000';
 
-    _receiveTween = null;
-
     onLoad() {
         this.time = 1;
         this._tweenType = TweenType.COLOR;

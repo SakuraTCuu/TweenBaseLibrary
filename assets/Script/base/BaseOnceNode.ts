@@ -297,7 +297,6 @@ export default class BaseOnceNode extends BaseNode {
         targetName = targetName || "tweenData";
 
         let tween = this.returnData();
-        cc.log(tween);
         let tweenData = this.getStandardTween(tween);
         let exportData = this._exportData;
 
@@ -342,7 +341,6 @@ export default class BaseOnceNode extends BaseNode {
     getStartTween() { /**开始动画前插入一个回调 */
         if (!this.export) {
             return cc.tween().call(() => {
-                cc.log("startTween");
                 this.startEffect();
             }).clone();
         }
@@ -361,7 +359,6 @@ export default class BaseOnceNode extends BaseNode {
         if (!this.Effect) {
             return;
         }
-        cc.log("startEffect", this.time);
         // this.node.color = cc.Color.RED;
         this.Effect.node.active = true;
         this.Effect.node.opacity = 200;

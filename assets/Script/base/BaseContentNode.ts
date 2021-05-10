@@ -10,11 +10,11 @@ export default class BaseContentNode extends BaseOnceNode {
     @property(cc.Node)
     ContentNode: cc.Node = null;
 
-    @property(cc.Prefab)
-    ItemPrefab: cc.Prefab = null;
+    @property(cc.Node)
+    AddBtn: cc.Node = null;
 
     @property(cc.Prefab)
-    Item2Prefab: cc.Prefab = null;
+    TweenListPrefab: cc.Prefab = null;
 
     bindNodeList: Array<cc.Node> = [];
 
@@ -22,6 +22,7 @@ export default class BaseContentNode extends BaseOnceNode {
     height: number = 0;
     originHeight: number = 0;//初始高度
 
+    TweenListNode: cc.Node;
     returnTween: cc.Tween = cc.tween();
 
     onLoad() {
@@ -32,6 +33,20 @@ export default class BaseContentNode extends BaseOnceNode {
         this.node.on('delete', this.deleteItem, this);
 
         this.node.on('changeData', this.changeData, this);
+
+        this.node.on('add', this.addItem, this);
+
+        this.node.on(cc.Node.EventType.TOUCH_END, this.touchEndLogic, this);
+    }
+
+    start() {
+        this.TweenListNode = cc.instantiate(this.TweenListPrefab);
+        this.TweenListNode.parent = this.node;
+        this.TweenListNode.active = false;
+    }
+
+    touchEndLogic() {
+        this.TweenListNode.active = false;
     }
 
     changeData(e) {
@@ -43,25 +58,36 @@ export default class BaseContentNode extends BaseOnceNode {
         let newTween = cc.tween();
         let resultTween: Array<cc.Tween<cc.Node>> = new Array();
         let resultData: Array<any> = new Array();
+        let repeatTime;
         let keys = Object.keys(this.parallelData);
         for (const key in keys) {
             if (Object.prototype.hasOwnProperty.call(this.parallelData, keys[key])) {
                 let { tweenData, tween } = this.parallelData[keys[key]];
-                if (tweenData.data.time > time) {
-                    time = tweenData.data.time;
+                if (tweenData.tweenType === TweenType.REPEAT) {
+                    repeatTime = tweenData.data.repeat;
+                } else {
+                    if (tweenData.data.time > time) {
+                        time = tweenData.data.time;
+                    }
+                    resultTween.push(tween);
+                    resultData.push(tweenData);
                 }
-                resultTween.push(tween);
-                resultData.push(tweenData);
             }
         }
 
         this.time = time;
-        cc.log('time', this.time);
         if (resultTween.length === 1) {
             newTween.then(resultTween[0]);
         } else if (resultTween.length > 1) {
             //@ts-ignore  傻逼
             newTween.parallel(...resultTween);
+        } else {
+            return;
+        }
+
+        if (repeatTime && resultTween.length >= 1) {
+            newTween.union().repeat(repeatTime);
+            this.time = time * repeatTime;
         }
 
         Object.assign(this._exportData, {
@@ -94,34 +120,29 @@ export default class BaseContentNode extends BaseOnceNode {
         this.sendPosition();
     }
 
-    isFirst;
     /**点击添加 */
     onClickAdd() {
-        let pos = this.node.convertToWorldSpaceAR(this.node.position);
-        pos.x += this.node.width / 2;
-        let data = {
-            pos,
-            hook_cb: (prefab) => {
-                cc.log("prefab", prefab)
-                if (prefab) {
-                    let item = cc.instantiate(prefab);
-                    item.parent = this.ContentNode;
-                    let uuid = item.getComponent(BaseTween).getUuid();
-                    this.bindNodeList[uuid] = item;
-                    this.height = item.height + 10;
-                    /**重新计算高度 */
-                    this.resetHeight();
-                    this.sendPosition();
-                }
-            }
-        }
-        this.dispatchEvent('showSelect', data);
+        let pos = this.AddBtn.position;
+        pos.x += this.TweenListNode.width / 2;
+        this.TweenListNode.position = pos;
+        this.TweenListNode.active = true;
+    }
+
+    addItem(e) {
+        let { prefab } = e.getUserData();
+        let item = cc.instantiate(prefab);
+        item.parent = this.ContentNode;
+        let uuid = item.getComponent(BaseTween).getUuid();
+        this.bindNodeList[uuid] = item;
+        this.height = item.height;
+        /**重新计算高度 */
+        this.resetHeight();
+        this.sendPosition();
     }
 
     /**重置高度 */
     resetHeight() {
         let count = this.ContentNode.childrenCount;
-        cc.log('reset->', count);
         let height = count * this.height;
         this.node.height = this.originHeight + height;
     }

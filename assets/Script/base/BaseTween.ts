@@ -39,6 +39,7 @@ export default class BaseTween extends BaseNode {
 
     start() {
         this.sendTweenData();
+        this.updateColor();
     }
 
     sendTweenData() {

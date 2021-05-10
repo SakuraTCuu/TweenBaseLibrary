@@ -1,4 +1,6 @@
+import AudioMgr from "./AudioManager";
 import BaseNode from "./base/BaseNode";
+import TweenParseManager from "./TweenParseManager";
 
 const { ccclass, property } = cc._decorator;
 
@@ -39,6 +41,11 @@ export default class Helloworld extends cc.Component {
     @property(cc.Node)
     TweenListNode: cc.Node = null;
 
+    @property(cc.AudioClip)
+    audio1: cc.AudioClip = null;
+    @property(cc.AudioClip)
+    audio2: cc.AudioClip = null;
+
     zIndex = 0;
     clickPos: cc.Vec3 = cc.v3();
     touchType: boolean = true;
@@ -74,8 +81,6 @@ export default class Helloworld extends cc.Component {
 
         this.node.on('bindSuc', this.bindSuc, this)
         this.node.on("unBindLine2", this.unBindLine, this);
-
-        this.node.on("showSelect", this.showSelect, this);
 
         this.node.on("tweenData", this.receiveTweenData, this);
         this.node.on("tweenStart", this.tweenStart, this);
@@ -182,7 +187,7 @@ export default class Helloworld extends cc.Component {
 
         let item = this.NodeList[nextUuid];
         if (!item) {
-            cc.log("error, tarUuid not found");
+            // cc.log("error, tarUuid not found");
             return;
         }
 
@@ -207,15 +212,16 @@ export default class Helloworld extends cc.Component {
         tweenData
             .target(this.MainNode)
             .call(() => {
-                /**重置 */
+                /** 重置 */
                 this.resetTween();
             })
-            // .repeatForever(tweenData) /**重复执行 */
-            .start();
+        // .repeatForever(tweenData) /**重复执行 */
+        .start();
         /**延后解析数据 */
         setTimeout(() => {
             let data = this.parseExportData();
-            cc.log(data)
+            cc.log(JSON.stringify(data))
+            TweenParseManager.getTweenByData(this.MainNode, data);
         })
     }
 
@@ -267,22 +273,11 @@ export default class Helloworld extends cc.Component {
         cc.log(this.MainCamera.zoomRatio);
     }
 
-    showSelect(e) {
-        let { pos, hook_cb } = e.getUserData();
-        pos = this.ContentNode.convertToNodeSpaceAR(pos);
-        this.TweenListNode.position = pos;
-        this.TweenListNode.active = true;
-        this.TweenListNode['$methods'] = hook_cb;
-    }
-
     onMouseUp(event) {
         event.stopPropagation();
         if (this.touchType && event.getButton() === cc.Event.EventMouse.BUTTON_RIGHT) {
             let pos = event.getLocation();
             pos = this.ContentNode.convertToNodeSpaceAR(pos);
-            // this.clickPos = pos;
-            // this.TweenListNode.position = pos;
-            // this.TweenListNode.active = true;
             let contentItem = cc.instantiate(this.ContentPrefab);
             contentItem.position = pos;
             contentItem.parent = this.ContentNode;
@@ -341,47 +336,5 @@ export default class Helloworld extends cc.Component {
             event.stopPropagation();
             node.zIndex = ++this.zIndex;
         }, this)
-    }
-
-    /**创建一个tween节点 */
-    createTweenNode(prefab: cc.Prefab) {
-        // let pos = this.clickPos;
-        // let item = cc.instantiate(prefab);
-        // item.position = pos;
-        // item.parent = this.ContentNode;
-        // let uuid = item.getComponent(BaseNode).getUuid();
-        // this.NodeList[uuid] = item;
-        // this.addEvent(item);
-        this.TweenListNode['$methods'] && this.TweenListNode['$methods'](prefab);
-    }
-
-    onClickTweenList(event, type) {
-        this.TweenListNode.active = false;
-        switch (type) {
-            case 'position':
-                this.createTweenNode(this.PositionPre);
-                break;
-            case 'scale':
-                this.createTweenNode(this.ScalePre);
-                break;
-            case 'opacity':
-                this.createTweenNode(this.AlphaPre);
-                break;
-            case 'angle':
-                this.createTweenNode(this.AnglePre);
-                break;
-            case 'color':
-                this.createTweenNode(this.ColorPre);
-                break;
-            case 'sequence':
-                alert('开发中...')
-                break;
-            case 'parallel':
-                alert('开发中...')
-                break;
-            case 'repeat':
-                alert('开发中...')
-                break;
-        }
     }
 }

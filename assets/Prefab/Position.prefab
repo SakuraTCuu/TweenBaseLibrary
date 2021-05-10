@@ -45,9 +45,9 @@
     "_opacity": 255,
     "_color": {
       "__type__": "cc.Color",
-      "r": 161,
-      "g": 216,
-      "b": 124,
+      "r": 157,
+      "g": 153,
+      "b": 153,
       "a": 255
     },
     "_contentSize": {
@@ -135,7 +135,7 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        -50,
+        -75,
         0,
         0,
         0,
@@ -739,7 +739,7 @@
     "alignMode": 1,
     "_target": null,
     "_alignFlags": 8,
-    "_left": 50,
+    "_left": 25,
     "_right": 0,
     "_top": 55,
     "_bottom": 0,

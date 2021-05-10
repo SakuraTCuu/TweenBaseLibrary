@@ -26,6 +26,10 @@ export default class BaseNode extends cc.Component {
         if (this.UuidLabel) {
             this.UuidLabel.string = this._uuid + "   " + this.getNodeType();
         }
+        this.updateColor();
+    }
+
+    updateColor() {
         this.node.color = this.getNodeColor();
     }
 
@@ -41,7 +45,7 @@ export default class BaseNode extends cc.Component {
             case TweenType.ANGLE: return cc.color(TypeColor.angle);
             case TweenType.COLOR: return cc.color(TypeColor.color);
             case TweenType.START: return cc.color(TypeColor.start);
-            case TweenType.PARALLEL: return cc.color(TypeColor.start);
+            case TweenType.REPEAT: return cc.color(TypeColor.start);
                 return cc.Color.BLUE;
         }
     }
