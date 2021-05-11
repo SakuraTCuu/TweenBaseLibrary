@@ -67,9 +67,10 @@ export default class Position extends BaseTween {
             easingType: this._easingType,
             tweenFlag: this._tweenFlag,
             tweenType: this._tweenType,
+            time: this.time,
             data: {
-                time: this.time,
-                position: { x: this.x, y: this.y }
+                // position: { x: this.x, y: this.y }
+                position: cc.v2(this.x, this.y)
             }
         })
     }

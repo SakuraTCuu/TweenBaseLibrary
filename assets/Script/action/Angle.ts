@@ -34,7 +34,7 @@ export default class Angle extends BaseTween {
                 break;
         }
 
-        // this.sendTweenData(0);
+        this.sendTweenData();
     }
 
     /**怎么返回tween? */
@@ -58,8 +58,8 @@ export default class Angle extends BaseTween {
             easingType: this._easingType,
             tweenFlag: this._tweenFlag,
             tweenType: this._tweenType,
+            time: this.time,
             data: {
-                time: this.time,
                 angle: this.angle,
             }
         })

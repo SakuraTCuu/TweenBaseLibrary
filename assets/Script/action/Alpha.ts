@@ -19,6 +19,7 @@ export default class Alpha extends BaseTween {
     onLoad() {
         this.time = 1;
         this._tweenType = TweenType.ALPHA;
+        this._tweenFlag = TweenFlag.TO;
 
         this.tEdit.string = this.time + "";
         this.aEdit.string = this.alpha + "";
@@ -33,13 +34,7 @@ export default class Alpha extends BaseTween {
                 this.time = Number(event.string);
                 break;
         }
-        // this.sendTweenData(0);
-        let result = {
-            time: this.time,
-            alpha: this.alpha,
-        }
-
-        this.dispatchEvent('changeData', result);
+        this.sendTweenData();
     }
 
     /**怎么返回tween? */
@@ -63,9 +58,10 @@ export default class Alpha extends BaseTween {
             easingType: this._easingType,
             tweenFlag: this._tweenFlag,
             tweenType: this._tweenType,
+            time: this.time,
             data: {
-                time: this.time,
-                alpha: this.alpha,
+                // alpha: this.alpha,
+                opacity: this.alpha * 255
             }
         })
     }

@@ -42,7 +42,7 @@ export default class Scale extends BaseTween {
                 break;
         }
 
-        // this.sendTweenData(0);
+        this.sendTweenData();
     }
 
     /**怎么返回tween? */
@@ -68,9 +68,9 @@ export default class Scale extends BaseTween {
             easingType: this._easingType,
             tweenFlag: this._tweenFlag,
             tweenType: this._tweenType,
+            time: this.time,
             data: {
-                time: this.time,
-                scale: { x: this.x, y: this.y }
+                scaleX: this.x, scaleY: this.y
             }
         })
     }

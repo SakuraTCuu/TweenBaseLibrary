@@ -36,6 +36,8 @@ export default class BaseContentNode extends BaseOnceNode {
 
         this.node.on('add', this.addItem, this);
 
+        this.node.on('delete', this.delItem, this);
+
         this.node.on(cc.Node.EventType.TOUCH_END, this.touchEndLogic, this);
     }
 
@@ -58,7 +60,7 @@ export default class BaseContentNode extends BaseOnceNode {
         let newTween = cc.tween();
         let resultTween: Array<cc.Tween<cc.Node>> = new Array();
         let resultData: Array<any> = new Array();
-        let repeatTime;
+        let repeatTime = 1;
         let keys = Object.keys(this.parallelData);
         for (const key in keys) {
             if (Object.prototype.hasOwnProperty.call(this.parallelData, keys[key])) {
@@ -92,7 +94,8 @@ export default class BaseContentNode extends BaseOnceNode {
 
         Object.assign(this._exportData, {
             tweenType: this._tweenType,
-            data: resultData
+            data: resultData,
+            repeatTime
         })
 
         this.returnTween = newTween.clone();
@@ -135,6 +138,15 @@ export default class BaseContentNode extends BaseOnceNode {
         let uuid = item.getComponent(BaseTween).getUuid();
         this.bindNodeList[uuid] = item;
         this.height = item.height;
+        /**重新计算高度 */
+        this.resetHeight();
+        this.sendPosition();
+    }
+
+    delItem(e) {
+        let { uuid } = e.getUserData();
+        this.bindNodeList[uuid].destroy();
+        delete this.bindNodeList[uuid];
         /**重新计算高度 */
         this.resetHeight();
         this.sendPosition();

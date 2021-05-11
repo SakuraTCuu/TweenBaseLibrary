@@ -1,5 +1,6 @@
 import AudioMgr from "./AudioManager";
 import BaseNode from "./base/BaseNode";
+import EasingList from "./EasingList";
 import TweenParseManager from "./TweenParseManager";
 
 const { ccclass, property } = cc._decorator;
@@ -40,6 +41,8 @@ export default class Helloworld extends cc.Component {
     ColorPre: cc.Prefab = null;
     @property(cc.Node)
     TweenListNode: cc.Node = null;
+    @property(cc.Node)
+    EasingListNode: cc.Node = null;
 
     @property(cc.AudioClip)
     audio1: cc.AudioClip = null;
@@ -59,6 +62,7 @@ export default class Helloworld extends cc.Component {
 
     start() {
         this.TweenListNode.zIndex = 999;
+        this.EasingListNode.zIndex = 999;
         let item = cc.instantiate(this.StartPre);
         item.position = cc.v3(500, 200);
         item.parent = this.ContentNode;
@@ -81,6 +85,7 @@ export default class Helloworld extends cc.Component {
 
         this.node.on('bindSuc', this.bindSuc, this)
         this.node.on("unBindLine2", this.unBindLine, this);
+        this.node.on("showEasing", this.showEasing, this);
 
         this.node.on("tweenData", this.receiveTweenData, this);
         this.node.on("tweenStart", this.tweenStart, this);
@@ -216,13 +221,30 @@ export default class Helloworld extends cc.Component {
                 this.resetTween();
             })
         // .repeatForever(tweenData) /**重复执行 */
-        .start();
+        // .start();
         /**延后解析数据 */
         setTimeout(() => {
             let data = this.parseExportData();
             cc.log(JSON.stringify(data))
-            TweenParseManager.getTweenByData(this.MainNode, data);
+            let tween = TweenParseManager.getTweenByData(data);
+            //@ts-ignore
+            tween.target(this.MainNode)
+                .call(() => {
+                    /** 重置 */
+                    this.resetTween();
+                })
+                .start();
         })
+    }
+
+    /**展示缓动列表 */
+    showEasing(e) {
+        let { pos, hook_cb } = e.getUserData();
+        // let item = cc.instantiate(this.EasingPrefab);
+        // item.parent = this.ContentNode;
+        this.EasingListNode.active = true;
+        this.EasingListNode.position = this.ContentNode.convertToNodeSpaceAR(pos);
+        this.EasingListNode.getComponent(EasingList).showView(hook_cb);
     }
 
     resetTween() {
@@ -297,6 +319,7 @@ export default class Helloworld extends cc.Component {
      */
     touchMove(event: cc.Event.EventTouch) {
         this.TweenListNode.active = false;
+        this.EasingListNode.active = false;
         event.stopPropagation();
         let x = event.getDeltaX();
         let y = event.getDeltaY();

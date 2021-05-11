@@ -42,6 +42,15 @@ export default class BaseTween extends BaseNode {
         this.updateColor();
     }
 
+    showEasingType() {
+        this.dispatchEvent("showEasing", {
+            pos: this.node.convertToWorldSpaceAR(cc.v2(250, 0)),
+            hook_cb: (type) => {
+                this.easingType = type;
+            }
+        });
+    }
+
     sendTweenData() {
         let tween = this.returnData();
 

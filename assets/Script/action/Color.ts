@@ -17,6 +17,7 @@ export default class Color extends BaseTween {
     onLoad() {
         this.time = 1;
         this._tweenType = TweenType.COLOR;
+        this._tweenFlag = TweenFlag.TO;
 
         this.tEdit.string = this.time + "";
         this.cEdit.string = this.c;
@@ -55,9 +56,10 @@ export default class Color extends BaseTween {
             easingType: this._easingType,
             tweenFlag: this._tweenFlag,
             tweenType: this._tweenType,
+            time: this.time,
             data: {
-                time: this.time,
-                color: this.c,
+                color: cc.color(this.c)
+                // color: this.c
             }
         })
     }
