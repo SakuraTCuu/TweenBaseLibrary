@@ -19,25 +19,8 @@ export default class BaseOnceNode extends BaseNode {
     @property(cc.Sprite)
     Effect: cc.Sprite = null;
 
-    protected _easingType: EasingType = EasingType.NULL;/**缓动类型 */
-    public get easingType() {
-        return this._easingType;
-    }
-    public set easingType(value) {
-        this._easingType = value;
-    }
-
-    protected _tweenFlag: TweenFlag = TweenFlag.BY; /** tween 标志 */
-    public get tweenFlag(): TweenFlag {
-        return this._tweenFlag;
-    }
-    public set tweenFlag(value: TweenFlag) {
-        this._tweenFlag = value;
-    }
-
     protected _exportData = {};
     protected _preTween: cc.Tween = null; //上级传过来的tween
-    protected _uuid: string = Date.now() + "";//随机生成uuid 作为唯一标识 TODO Temp
     protected _toUuid: string = "";  //右边节点  to
     protected _fromUuid: string = ""; //左边节点 接收
     private _time: number = 0;
@@ -99,7 +82,7 @@ export default class BaseOnceNode extends BaseNode {
     updateView() {
         this.LineTo && (this.LineTo.color = this.node.color);
         this.LineFrom && (this.LineFrom.color = this.node.color);
-        this.Effect && (this.Effect.node.color = cc.Color.WHITE);
+        // this.Effect && (this.Effect.node.color = cc.Color.WHITE);
     }
 
     /** 每一个继承自此基类的组件都向main派发事件
@@ -328,7 +311,7 @@ export default class BaseOnceNode extends BaseNode {
                 let temp = this._preTween.clone();
                 return temp.then(tween).then(oriTween).then(endTween);
             }
-            return tween.then(oriTween).then(endTween);
+            return tween.then(oriTween).then(endTween).union().clone();
         } else {
             if (this._preTween) { //把上级tween封装进来
                 let temp = this._preTween.clone();
@@ -342,7 +325,7 @@ export default class BaseOnceNode extends BaseNode {
         if (!this.export) {
             return cc.tween().call(() => {
                 this.startEffect();
-            }).clone();
+            });
         }
     }
 
@@ -368,6 +351,7 @@ export default class BaseOnceNode extends BaseNode {
         this.effectTween = cc.tween(this.Effect);
         this.effectTween
             .call(() => {
+                cc.log("call")
                 this.otherTime = this.time;
                 this.startTime = Date.now();
                 this.isStop = false;

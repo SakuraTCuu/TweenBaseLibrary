@@ -34,7 +34,7 @@ export default class TweenParseManager {
             return cc.error("Invalid data");
         }
 
-        // cc.log(data);
+        cc.log(data);
         let baseTween = cc.tween();
         for (let i = 0; i < data.length; i++) {
             const tweenInfo = data[i];
@@ -53,9 +53,9 @@ export default class TweenParseManager {
                     // @ts-ignore
                     baseTween = baseTween.parallel(...resultTween);
                 } else {
-                    baseTween = baseTween.then(resultTween[0])
+                    baseTween = baseTween.then(resultTween[0]);
                 }
-                baseTween.repeat(repeatTime);
+                baseTween.union().repeat(repeatTime);
             }
         }
         return baseTween;
@@ -66,9 +66,11 @@ export default class TweenParseManager {
         let tween = new cc.Tween();
         let easing = this.getEasingByType(action.easingType);
         if (action.tweenFlag === TweenFlag.BY) {
-            tween.by(action.time, action.data, { easing });
+            tween.by(action.time, action.data);
+            // tween.by(action.time, action.data, { easing });
         } else {
-            tween.to(action.time, action.data, { easing });
+            tween.to(action.time, action.data);
+            // tween.to(action.time, action.data, { easing });
         }
         return tween;
     }

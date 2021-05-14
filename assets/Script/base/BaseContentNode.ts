@@ -66,10 +66,10 @@ export default class BaseContentNode extends BaseOnceNode {
             if (Object.prototype.hasOwnProperty.call(this.parallelData, keys[key])) {
                 let { tweenData, tween } = this.parallelData[keys[key]];
                 if (tweenData.tweenType === TweenType.REPEAT) {
-                    repeatTime = tweenData.data.repeat;
+                    repeatTime = Number(tweenData.data.repeat);
                 } else {
-                    if (tweenData.data.time > time) {
-                        time = tweenData.data.time;
+                    if (tweenData.time > time) {
+                        time = tweenData.time;
                     }
                     resultTween.push(tween);
                     resultData.push(tweenData);
@@ -78,10 +78,11 @@ export default class BaseContentNode extends BaseOnceNode {
         }
 
         this.time = time;
+        cc.log(this.time);
         if (resultTween.length === 1) {
             newTween.then(resultTween[0]);
         } else if (resultTween.length > 1) {
-            //@ts-ignore  傻逼
+            // @ts-ignore  傻逼
             newTween.parallel(...resultTween);
         } else {
             return;

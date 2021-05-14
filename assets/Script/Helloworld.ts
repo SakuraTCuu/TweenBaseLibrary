@@ -221,7 +221,7 @@ export default class Helloworld extends cc.Component {
                 this.resetTween();
             })
         // .repeatForever(tweenData) /**重复执行 */
-        // .start();
+        .start();
         /**延后解析数据 */
         setTimeout(() => {
             let data = this.parseExportData();
@@ -233,7 +233,7 @@ export default class Helloworld extends cc.Component {
                     /** 重置 */
                     this.resetTween();
                 })
-                .start();
+                // .start();
         })
     }
 
