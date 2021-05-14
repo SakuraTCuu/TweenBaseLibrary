@@ -225,7 +225,7 @@ export default class Helloworld extends cc.Component {
         /**延后解析数据 */
         setTimeout(() => {
             let data = this.parseExportData();
-            cc.log(JSON.stringify(data))
+            // cc.log(JSON.stringify(data))
             let tween = TweenParseManager.getTweenByData(data);
             //@ts-ignore
             tween.target(this.MainNode)

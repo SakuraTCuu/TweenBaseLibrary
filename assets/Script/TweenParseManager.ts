@@ -34,7 +34,7 @@ export default class TweenParseManager {
             return cc.error("Invalid data");
         }
 
-        cc.log(data);
+        // cc.log(data);
         let baseTween = cc.tween();
         for (let i = 0; i < data.length; i++) {
             const tweenInfo = data[i];
