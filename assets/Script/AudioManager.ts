@@ -72,6 +72,10 @@
 //     }
 // }
 
+/**
+ * TODO 
+ *  需要处理多个相同的音效调用, 应该不中断当前,而是不播放传入的
+ */
 export default class AudioMgr {
 
     static ThreadData = {};
@@ -89,7 +93,9 @@ export default class AudioMgr {
             return;
         }
         if (thread.isPlaying) {
-            cc.log("语音正在播放,安静排队ing...");
+            // cc.log("语音正在播放,安静排队ing...");
+            /**中断播放,有回调播回调 */
+            thread.stop();
             return;
         }
         thread.play();
@@ -98,11 +104,22 @@ export default class AudioMgr {
     /**不会有同源音频播放 */
 
     /**中断操作 */
-    public static stopVoice(audioId) {
+    public static stopVoice(audioId: number) {
+        if (typeof audioId === undefined || typeof audioId === null) {
+            return;
+        }
+        /** 背景音/特效音 */
         let thread = this.ThreadData[audioId];
         if (thread && thread.isPlaying) {
             thread.stop();
         }
+
+        /** 语音 */
+        this.playList.forEach(item => {
+            if (item.audioId === audioId) {
+                item.stop();
+            }
+        });
     }
 
     /**
@@ -133,7 +150,9 @@ export default class AudioMgr {
             this.update(audioId);
         });
         this.playList.push(thread);
+        /**尝试播放 */
         this.execLogic();
+        return thread.audioId;
     }
 
     /**播放特效*/
@@ -153,7 +172,13 @@ export default class AudioMgr {
 }
 
 class Thread {
-    _audioId: number = 0;
+    private _audioId: number = 0;
+    public get audioId(): number {
+        return this._audioId;
+    }
+    public set audioId(value: number) {
+        this._audioId = value;
+    }
     _audio: cc.AudioClip = null;
     _cb: Function = null;
     _isBGM: boolean = false;
