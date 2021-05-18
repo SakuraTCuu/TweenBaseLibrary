@@ -6,6 +6,10 @@ const { ccclass, property } = cc._decorator;
  * 本脚本管理所有的line连接的两方的连接关系
  */
 
+// type LineNodeListInfo<T> = {
+//     [P in keyof T]?: T[P];
+// };
+
 @ccclass
 export default class LineManager extends cc.Component {
 
@@ -15,7 +19,7 @@ export default class LineManager extends cc.Component {
     @property(cc.Prefab)
     LinePrefab: cc.Prefab = null;
 
-    LineNodeListInfo = {};
+    LineNodeListInfo: cc.Node[] = [];
     bindInfo = [];
 
     onLoad() {

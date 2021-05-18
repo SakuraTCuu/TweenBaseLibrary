@@ -1,6 +1,7 @@
 import AudioMgr from "./AudioManager";
 import BaseNode from "./base/BaseNode";
 import EasingList from "./EasingList";
+import Global from "./Global";
 import TweenParseManager from "./TweenParseManager";
 
 const { ccclass, property } = cc._decorator;
@@ -220,8 +221,8 @@ export default class Helloworld extends cc.Component {
                 /** 重置 */
                 this.resetTween();
             })
-        // .repeatForever(tweenData) /**重复执行 */
-        .start();
+            // .repeatForever(tweenData) /**重复执行 */
+            .start();
         /**延后解析数据 */
         setTimeout(() => {
             let data = this.parseExportData();
@@ -233,7 +234,7 @@ export default class Helloworld extends cc.Component {
                     /** 重置 */
                     this.resetTween();
                 })
-                // .start();
+            // .start();
         })
     }
 
@@ -263,11 +264,17 @@ export default class Helloworld extends cc.Component {
         }
     }
 
+    resetZoomRatio() {
+        this.MainCamera.zoomRatio = 1;
+    }
+
     addZoomRatio() {
         this.MainCamera.zoomRatio += 0.05;
         if (this.MainCamera.zoomRatio > 1.5) {
             this.MainCamera.zoomRatio = 1.5;
         }
+        // Global.zoomRatio = 2 - this.MainCamera.zoomRatio;
+        // cc.log(Global.zoomRatio)
     }
 
     subZoomRatio() {
@@ -275,6 +282,8 @@ export default class Helloworld extends cc.Component {
         if (this.MainCamera.zoomRatio < 0.5) {
             this.MainCamera.zoomRatio = 0.5
         }
+        // Global.zoomRatio = 2 - this.MainCamera.zoomRatio;
+        // cc.log(Global.zoomRatio)
     }
 
     /**滚轮缩放 mac触摸板禁用 */
@@ -295,14 +304,24 @@ export default class Helloworld extends cc.Component {
         cc.log(this.MainCamera.zoomRatio);
     }
 
-    onMouseUp(event) {
+    onMouseUp(event: cc.Event.EventMouse) {
         event.stopPropagation();
         if (this.touchType && event.getButton() === cc.Event.EventMouse.BUTTON_RIGHT) {
             let pos = event.getLocation();
+            cc.log(pos.x, pos.y);
+            // pos = pos.multiply(cc.v2(Global.zoomRatio, 1));
             pos = this.ContentNode.convertToNodeSpaceAR(pos);
+            /**手动计算本地坐标位置 还是不太对*/
+            // let x = pos.x - this.node.width / 2;
+            // let y = pos.y - this.node.height / 2;
+            // x *= Global.zoomRatio;
+            // y *= Global.zoomRatio;
+            // // cc.log(x, y);
+            // pos = cc.v2(x, y);
+            // cc.log(pos.x, pos.y);
             let contentItem = cc.instantiate(this.ContentPrefab);
-            contentItem.position = pos;
             contentItem.parent = this.ContentNode;
+            contentItem.position = cc.v3(pos);
             let uuid = contentItem.getComponent(BaseNode).getUuid();
             this.NodeList[uuid] = contentItem;
             this.addEvent(contentItem);
@@ -321,8 +340,8 @@ export default class Helloworld extends cc.Component {
         this.TweenListNode.active = false;
         this.EasingListNode.active = false;
         event.stopPropagation();
-        let x = event.getDeltaX();
-        let y = event.getDeltaY();
+        let x = event.getDeltaX() * Global.zoomRatio;
+        let y = event.getDeltaY() * Global.zoomRatio;
         if (event['isBaseTouchMove']) { //是BaseOnceNode的移动事件,不需要处理
             return this.touchType = false;
         }
@@ -330,6 +349,8 @@ export default class Helloworld extends cc.Component {
             this.touchType = false;
         }
         this.updateToFromPos(x, y);
+        // this.MainCamera.node.x -= x;
+        // this.MainCamera.node.y -= y;
         this.ContentNode.x += x;
         this.ContentNode.y += y;
         if (this.ContentNode.x > 4000) {

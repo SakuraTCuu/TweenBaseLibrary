@@ -16,7 +16,7 @@ const ADUIO = 2;
 const DRAGON = 4;
 let data = {
     type: TWEEN | ADUIO,
-    main: [
+    main: [ /**行为, 数据下标 */
         {
             tween: 1,
             audio: 1,

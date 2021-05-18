@@ -45,6 +45,7 @@ export default class BaseContentNode extends BaseOnceNode {
         this.TweenListNode = cc.instantiate(this.TweenListPrefab);
         this.TweenListNode.parent = this.node;
         this.TweenListNode.active = false;
+        super.start();
     }
 
     touchEndLogic() {

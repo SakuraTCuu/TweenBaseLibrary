@@ -1,3 +1,4 @@
+import Global from "../Global";
 import BaseNode from "./BaseNode";
 import { EasingType, TweenFlag, TweenType, TypeColor } from "./Config";
 
@@ -166,8 +167,8 @@ export default class BaseOnceNode extends BaseNode {
             return;
         }
         event['isBaseTouchMove'] = true;
-        let x = event.getDeltaX();
-        let y = event.getDeltaY();
+        let x = event.getDeltaX() * Global.zoomRatio;
+        let y = event.getDeltaY() * Global.zoomRatio;
         this.node.x += x;
         this.node.y += y;
         this.sendPosition();
@@ -198,9 +199,11 @@ export default class BaseOnceNode extends BaseNode {
         let toPos, fromPos;
         if (this.LineTo) {
             toPos = this.node.convertToWorldSpaceAR(this.LineTo.position);
+            // toPos = this.node.convertToWorldSpaceAR(this.LineTo.position.multiply(cc.v3(Global.zoomRatio, 1)));
         }
         if (this.LineFrom) {
             fromPos = this.node.convertToWorldSpaceAR(this.LineFrom.position);
+            // fromPos = this.node.convertToWorldSpaceAR(this.LineFrom.position.multiply(cc.v3(Global.zoomRatio, 1)));
         }
 
         let data = {

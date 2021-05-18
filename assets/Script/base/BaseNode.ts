@@ -46,8 +46,8 @@ export default class BaseNode extends cc.Component {
             case TweenType.COLOR: return cc.color(TypeColor.color);
             case TweenType.START: return cc.color(TypeColor.start);
             case TweenType.REPEAT: return cc.color(TypeColor.start);
-                return cc.Color.BLUE;
         }
+        return cc.color(TypeColor.start);
     }
 
     getNodeType(): string {
