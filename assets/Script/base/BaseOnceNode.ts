@@ -20,6 +20,9 @@ export default class BaseOnceNode extends BaseNode {
     @property(cc.Sprite)
     Effect: cc.Sprite = null;
 
+    @property(cc.Node)
+    Delete: cc.Node = null;
+
     protected _exportData = {};
     protected _preTween: cc.Tween = null; //上级传过来的tween
     protected _toUuid: string = "";  //右边节点  to
@@ -38,6 +41,8 @@ export default class BaseOnceNode extends BaseNode {
     private isRunning: boolean = false;
     private isStop: boolean = false;
     private effectTween: cc.Tween = null;
+
+    private destroy_flag: boolean = false;
 
     onLoad() {
 
@@ -94,6 +99,9 @@ export default class BaseOnceNode extends BaseNode {
 
         this.node.on(cc.Node.EventType.TOUCH_MOVE, this.touchMove, this)
         this.node.on(cc.Node.EventType.TOUCH_END, this.touchEnd, this)
+        if (this.Delete) {
+            this.Delete.on(cc.Node.EventType.TOUCH_END, this.touchDeleteEnd, this);
+        }
 
         if (this.LineTo) {
             this.LineTo.on(cc.Node.EventType.TOUCH_START, this.touchLineStart, this)
@@ -102,6 +110,20 @@ export default class BaseOnceNode extends BaseNode {
             this.LineTo.on(cc.Node.EventType.TOUCH_CANCEL, this.touchLineEnd, this);
         }
         this.sendPosition();
+    }
+
+    /**删除本节点  发送消息*/
+    touchDeleteEnd() {
+        let data = {
+            uuid: this._uuid,
+            to_uuid: this._toUuid,
+            from_uuid: this._fromUuid,
+            pos: cc.v2(9999, 9999) /**不在范围内就相当于删除 */
+        }
+        this.destroy_flag = true;
+
+        this.sendTweenData(0);
+        this.dispatchEvent("destroy", data);
     }
 
     touchLineFromStart(e: cc.Event.EventTouch) {
@@ -174,7 +196,7 @@ export default class BaseOnceNode extends BaseNode {
         this.sendPosition();
     }
 
-    touchEnd() {
+    touchEnd(event) {
         event.stopPropagation();
         if (this.isRunning) {
             let data = {
@@ -196,6 +218,9 @@ export default class BaseOnceNode extends BaseNode {
     }
 
     sendPosition() {
+        if (this.destroy_flag) {
+            return;
+        }
         let toPos, fromPos;
         if (this.LineTo) {
             toPos = this.node.convertToWorldSpaceAR(this.LineTo.position);
@@ -282,8 +307,17 @@ export default class BaseOnceNode extends BaseNode {
     sendTweenData(isCustom?, targetName?) {
         targetName = targetName || "tweenData";
 
+        if (this.destroy_flag) {
+            return;
+        }
+
         let tween = this.returnData();
         let tweenData = this.getStandardTween(tween);
+
+        // Object.assign(this._exportData, {
+        //     hook_cb: 'test'
+        // })
+
         let exportData = this._exportData;
 
         if (!isCustom) {
@@ -306,6 +340,9 @@ export default class BaseOnceNode extends BaseNode {
 
     /**封装好的数据 */
     getStandardTween(oriTween: cc.Tween) {
+        // if (this.destroy_flag) {
+        //     return cc.tween();
+        // }
         let tween = this.getStartTween().clone();
         let endTween = this.getEndTween().clone();
 
@@ -330,6 +367,7 @@ export default class BaseOnceNode extends BaseNode {
                 this.startEffect();
             });
         }
+        return cc.tween();
     }
 
     getEndTween() {
@@ -354,7 +392,6 @@ export default class BaseOnceNode extends BaseNode {
         this.effectTween = cc.tween(this.Effect);
         this.effectTween
             .call(() => {
-                cc.log("call")
                 this.otherTime = this.time;
                 this.startTime = Date.now();
                 this.isStop = false;

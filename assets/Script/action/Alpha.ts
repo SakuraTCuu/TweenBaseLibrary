@@ -14,8 +14,6 @@ export default class Alpha extends BaseTween {
 
     alpha: number = 0.2;
 
-    _receiveTween = null;
-
     onLoad() {
         this.time = 1;
         this._tweenType = TweenType.ALPHA;
@@ -26,6 +24,7 @@ export default class Alpha extends BaseTween {
     }
 
     onChangeEnd(event, data) {
+        cc.log(event)
         switch (data) {
             case "a":
                 this.alpha = Number(event.string);

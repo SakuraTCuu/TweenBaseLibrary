@@ -35,14 +35,24 @@ let data = {
             repeatTime: 1, /**重复次数 */
             data: [
                 {
-                    audio: 0, /**语音下标 */
+                    // audio: 0, /**语音下标 */
                     easingType: 0, /**缓动类型 */
                     time: 1,  /**时间 */
                     tweenFlag: 1, /** to/by */
                     data: {
                         position: {}
                     },
-                    hook_cb: '', /**回调事件 */
+                    hook_cb: 'test', /**回调事件 */
+                },
+                {
+                    // audio: 0, /**语音下标 */
+                    easingType: 0, /**缓动类型 */
+                    time: 1,  /**时间 */
+                    tweenFlag: 1, /** to/by */
+                    data: {
+                        position: {}
+                    },
+                    hook_cb: 'stop2', /**回调事件 */
                 }
             ],
         }

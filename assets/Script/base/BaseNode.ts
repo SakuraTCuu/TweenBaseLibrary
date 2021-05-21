@@ -59,6 +59,8 @@ export default class BaseNode extends cc.Component {
             case TweenType.COLOR: return 'Color';
             case TweenType.START: return 'Start';
             case TweenType.PARALLEL: return 'Parallel';
+            case TweenType.CALL: return 'Call';
+            case TweenType.DELAY: return 'Delay';
                 return '';
         }
     }

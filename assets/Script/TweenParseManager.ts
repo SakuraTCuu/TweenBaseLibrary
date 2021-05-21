@@ -8,6 +8,7 @@ interface actionBean {
     tweenFlag: number;
     tweenType: number;
     time: number;
+    hook_cb: string;
 }
 
 interface dataBean {
@@ -15,6 +16,57 @@ interface dataBean {
     angle: number;
 }
 
+class customTween {
+    _tween: cc.Tween = null;
+    _event: {} = {};
+    _target: any = null;
+    constructor(tween: cc.Tween) {
+        new Array().concat
+        this._tween = tween;
+    }
+
+    /**传this 直接调方法 */
+    ccc(obj: any) {
+        this._target = obj;
+        return this;
+    }
+
+    /**事件回调 */
+    on(name: string, cb: Function) {
+        this._event[name] = cb;
+        return this;
+    }
+
+    off(name: string) {
+        if (this._event[name]) {
+            delete this._event[name];
+        }
+        return this;
+    }
+
+    callBack(name: string) {
+        // this._target[name];
+        this._event[name] && this._event[name]();
+        return this;
+    }
+
+    target(obj) {
+        if (this._tween) {
+            this._tween.target(obj);
+        }
+        return this;
+    }
+
+    call(cb) {
+        this._tween.call(() => { cb && cb() });
+        return this;
+    }
+
+    start() {
+        this._tween.start();
+        return this;
+    }
+}
 
 @ccclass
 export default class TweenParseManager {
@@ -28,19 +80,26 @@ export default class TweenParseManager {
     // }
 
     /**解析data */
-    public static getTweenByData(data) {
+    public static getTweenByData(data): customTween {
         // data = data || this.data;
         if (!data || data.length <= 0) {
-            return cc.error("Invalid data");
+            cc.error("Invalid data");
+            return;
         }
 
         cc.log(data);
         let baseTween = cc.tween();
+
+        let customT = new customTween(baseTween);
+
         for (let i = 0; i < data.length; i++) {
             const tweenInfo = data[i];
             let type = tweenInfo.tweenType;
             let actionList: Array<actionBean> = tweenInfo.data;
             let repeatTime = tweenInfo.repeatTime;
+            let hook_cb = tweenInfo.hook_cb;
+            let delay = tweenInfo.delay;
+
             if (type === TweenType.PARALLEL) {
                 let resultTween = [];
                 for (let i = 0; i < actionList.length; i++) {
@@ -56,9 +115,21 @@ export default class TweenParseManager {
                     baseTween = baseTween.then(resultTween[0]);
                 }
                 baseTween.union().repeat(repeatTime);
+            } else if (type === TweenType.CALL) {
+                if (hook_cb && hook_cb.trim() !== '') {
+                    baseTween.call(() => {
+                        /**回调到外边去 */
+                        customT.callBack(hook_cb)
+                    });
+                }
+            } else if (type === TweenType.DELAY) {
+                if (delay && delay !== '') {
+                    baseTween.delay(Number(delay));
+                }
             }
         }
-        return baseTween;
+        return customT;
+        // return baseTween;
     }
 
     /** {easingType: 0, tweenFlag: 1, tweenType: 4, time: 1, data: {…}} */
@@ -72,6 +143,7 @@ export default class TweenParseManager {
             tween.to(action.time, action.data);
             // tween.to(action.time, action.data, { easing });
         }
+
         return tween;
     }
 

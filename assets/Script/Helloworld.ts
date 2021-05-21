@@ -1,5 +1,5 @@
 import AudioMgr from "./AudioManager";
-import BaseNode from "./base/BaseNode";
+import BaseOnceNode from "./base/BaseOnceNode";
 import EasingList from "./EasingList";
 import Global from "./Global";
 import TweenParseManager from "./TweenParseManager";
@@ -25,6 +25,12 @@ export default class Helloworld extends cc.Component {
     ContentPrefab: cc.Prefab = null;
 
     @property(cc.Prefab)
+    DelayPrefab: cc.Prefab = null;
+
+    @property(cc.Prefab)
+    CallPrefab: cc.Prefab = null;
+
+    @property(cc.Prefab)
     StartPre: cc.Prefab = null;
 
     @property(cc.Prefab)
@@ -41,7 +47,7 @@ export default class Helloworld extends cc.Component {
     @property(cc.Prefab)
     ColorPre: cc.Prefab = null;
     @property(cc.Node)
-    TweenListNode: cc.Node = null;
+    TypeListNode: cc.Node = null;
     @property(cc.Node)
     EasingListNode: cc.Node = null;
 
@@ -53,7 +59,7 @@ export default class Helloworld extends cc.Component {
     zIndex = 0;
     clickPos: cc.Vec3 = cc.v3();
     touchType: boolean = true;
-    NodeList = {};
+    NodeList: cc.Node[] = [];
     exportDataList: {} = {};
 
     onLoad() {
@@ -62,12 +68,11 @@ export default class Helloworld extends cc.Component {
     }
 
     start() {
-        this.TweenListNode.zIndex = 999;
         this.EasingListNode.zIndex = 999;
         let item = cc.instantiate(this.StartPre);
         item.position = cc.v3(500, 200);
         item.parent = this.ContentNode;
-        let uuid = item.getComponent(BaseNode).getUuid();
+        let uuid = item.getComponent(BaseOnceNode).getUuid();
         this.NodeList[uuid] = item;
         this.addEvent(item);
     }
@@ -87,6 +92,7 @@ export default class Helloworld extends cc.Component {
         this.node.on('bindSuc', this.bindSuc, this)
         this.node.on("unBindLine2", this.unBindLine, this);
         this.node.on("showEasing", this.showEasing, this);
+        this.node.on('destroy', this.ItemDestroy, this);
 
         this.node.on("tweenData", this.receiveTweenData, this);
         this.node.on("tweenStart", this.tweenStart, this);
@@ -94,13 +100,32 @@ export default class Helloworld extends cc.Component {
         this.node.on("tweenStop", this.tweenStop, this);
     }
 
+    /**删除节点 */
+    ItemDestroy(e) {
+        let { uuid, from_uuid, to_uuid, pos } = e.getUserData();
+
+        this.NodeList[to_uuid]?.getComponent(BaseOnceNode).unBindFromUuid();
+        this.NodeList[uuid]?.getComponent(BaseOnceNode).unBindFromUuid();
+        this.NodeList[from_uuid]?.getComponent(BaseOnceNode).unBindToUuid();
+        // this.NodeList[uuid].getComponent(BaseOnceNode).bindFromUuid(uuid);
+        /**延迟删除 */
+        this.scheduleOnce(() => {
+            this.NodeList[uuid].destroy();
+            this.NodeList[uuid] = null;
+            delete this.NodeList[uuid];
+        }, 0.017)
+
+        this.exportDataList[uuid] = null;
+        delete this.exportDataList[uuid];
+    }
+
     /**绑定成功 */
     bindSuc(e) {
         let { uuid, tarUuid } = e;
         /**绑定到同一个*/
         /**更新节点 */
-        this.NodeList[uuid].getComponent(BaseNode).bindToUuid(tarUuid);
-        this.NodeList[tarUuid].getComponent(BaseNode).bindFromUuid(uuid);
+        this.NodeList[uuid].getComponent(BaseOnceNode).bindToUuid(tarUuid);
+        this.NodeList[tarUuid].getComponent(BaseOnceNode).bindFromUuid(uuid);
 
         /**更新引用关系啊,不能忘啊 */
         if (this.exportDataList[tarUuid]) {
@@ -114,18 +139,18 @@ export default class Helloworld extends cc.Component {
         let { flag, uuid, uuid_to, tarUuid, type } = e;
 
         if (flag) {
-            this.NodeList[uuid].getComponent(BaseNode).unBindFromUuid();
+            this.NodeList[uuid]?.getComponent(BaseOnceNode).unBindFromUuid();
             /**绑定到同一个*/
             /**重新绑定新的 */
-            this.NodeList[uuid_to].getComponent(BaseNode).bindToUuid(tarUuid);
-            this.NodeList[tarUuid].getComponent(BaseNode).bindFromUuid(uuid_to);
+            this.NodeList[uuid_to]?.getComponent(BaseOnceNode).bindToUuid(tarUuid);
+            this.NodeList[tarUuid]?.getComponent(BaseOnceNode).bindFromUuid(uuid_to);
         } else {
             if (!type) {
                 cc.log('unbind')
                 this.deleteExportData(tarUuid);
                 //解绑
-                this.NodeList[uuid].getComponent(BaseNode).unBindFromUuid();
-                this.NodeList[tarUuid].getComponent(BaseNode).unBindToUuid();
+                this.NodeList[uuid]?.getComponent(BaseOnceNode).unBindFromUuid();
+                this.NodeList[tarUuid]?.getComponent(BaseOnceNode).unBindToUuid();
             }
         }
     }
@@ -151,7 +176,7 @@ export default class Helloworld extends cc.Component {
 
     addExportData(curIndex, preIndex) {
         if (preIndex && !this.exportDataList[preIndex]) {
-            let { curUuid, preUuid, nextUuid, exportData } = this.NodeList[preIndex].getComponent(BaseNode).getBaseInfo();
+            let { curUuid, preUuid, nextUuid, exportData } = this.NodeList[preIndex].getComponent(BaseOnceNode).getBaseInfo();
             if (nextUuid !== curIndex) {
                 cc.error("preUuid is no bind");
                 return;
@@ -197,7 +222,7 @@ export default class Helloworld extends cc.Component {
             return;
         }
 
-        item.getComponent(BaseNode).receiveData(tweenData);
+        item.getComponent(BaseOnceNode).receiveData(tweenData);
 
         /**存储数据*/
         /**todo 双链表存储数据 */
@@ -228,8 +253,9 @@ export default class Helloworld extends cc.Component {
             let data = this.parseExportData();
             // cc.log(JSON.stringify(data))
             let tween = TweenParseManager.getTweenByData(data);
-            //@ts-ignore
             tween.target(this.MainNode)
+                .on('test', this.test.bind(this))
+                // .ccc(this)
                 .call(() => {
                     /** 重置 */
                     this.resetTween();
@@ -237,6 +263,11 @@ export default class Helloworld extends cc.Component {
             // .start();
         })
     }
+
+    frameCallBack(key) { }
+    test() { cc.log(this.MainNode); }
+    stop() { }
+    resume() { }
 
     /**展示缓动列表 */
     showEasing(e) {
@@ -265,23 +296,60 @@ export default class Helloworld extends cc.Component {
     }
 
     resetZoomRatio() {
-        this.MainCamera.zoomRatio = 1;
+        // this.MainCamera.zoomRatio = 1;
+        this.ContentNode.scale = 1;
+
+        /**更新 */
+        for (const key in this.NodeList) {
+            if (Object.prototype.hasOwnProperty.call(this.NodeList, key)) {
+                const item = this.NodeList[key];
+                item.getComponent(BaseOnceNode).sendPosition();
+            }
+        }
     }
 
+    /**通过缩放节点来实现
+     * 而非 调整摄像机zoomRatio ,zoom缩放比例和实际坐标计算存在误差
+     */
     addZoomRatio() {
-        this.MainCamera.zoomRatio += 0.05;
-        if (this.MainCamera.zoomRatio > 1.5) {
-            this.MainCamera.zoomRatio = 1.5;
+        this.ContentNode.scale += 0.05;
+        if (this.ContentNode.scale > 1.5) {
+            this.ContentNode.scale = 1.5;
         }
+        /**更新 */
+        for (const key in this.NodeList) {
+            if (Object.prototype.hasOwnProperty.call(this.NodeList, key)) {
+                const item = this.NodeList[key];
+                item.getComponent(BaseOnceNode).sendPosition();
+            }
+        }
+
+        // this.MainCamera.zoomRatio += 0.05;
+        // if (this.MainCamera.zoomRatio > 1.5) {
+        //     this.MainCamera.zoomRatio = 1.5;
+        // }
         // Global.zoomRatio = 2 - this.MainCamera.zoomRatio;
         // cc.log(Global.zoomRatio)
     }
 
     subZoomRatio() {
-        this.MainCamera.zoomRatio -= 0.05;
-        if (this.MainCamera.zoomRatio < 0.5) {
-            this.MainCamera.zoomRatio = 0.5
+        this.ContentNode.scale -= 0.05;
+        if (this.ContentNode.scale < 0.5) {
+            this.ContentNode.scale = 0.5;
         }
+
+        /**更新 */
+        for (const key in this.NodeList) {
+            if (Object.prototype.hasOwnProperty.call(this.NodeList, key)) {
+                const item = this.NodeList[key];
+                item.getComponent(BaseOnceNode).sendPosition();
+            }
+        }
+
+        // this.MainCamera.zoomRatio -= 0.05;
+        // if (this.MainCamera.zoomRatio < 0.5) {
+        //     this.MainCamera.zoomRatio = 0.5
+        // }
         // Global.zoomRatio = 2 - this.MainCamera.zoomRatio;
         // cc.log(Global.zoomRatio)
     }
@@ -301,14 +369,14 @@ export default class Helloworld extends cc.Component {
         if (this.MainCamera.zoomRatio > 1.5) {
             this.MainCamera.zoomRatio = 1.5;
         }
-        cc.log(this.MainCamera.zoomRatio);
+        // cc.log(this.MainCamera.zoomRatio);
     }
 
     onMouseUp(event: cc.Event.EventMouse) {
         event.stopPropagation();
         if (this.touchType && event.getButton() === cc.Event.EventMouse.BUTTON_RIGHT) {
             let pos = event.getLocation();
-            cc.log(pos.x, pos.y);
+            // cc.log(pos.x, pos.y);
             // pos = pos.multiply(cc.v2(Global.zoomRatio, 1));
             pos = this.ContentNode.convertToNodeSpaceAR(pos);
             /**手动计算本地坐标位置 还是不太对*/
@@ -319,12 +387,64 @@ export default class Helloworld extends cc.Component {
             // // cc.log(x, y);
             // pos = cc.v2(x, y);
             // cc.log(pos.x, pos.y);
-            let contentItem = cc.instantiate(this.ContentPrefab);
-            contentItem.parent = this.ContentNode;
-            contentItem.position = cc.v3(pos);
-            let uuid = contentItem.getComponent(BaseNode).getUuid();
-            this.NodeList[uuid] = contentItem;
-            this.addEvent(contentItem);
+
+            // let contentItem = cc.instantiate(this.ContentPrefab);
+            // contentItem.parent = this.ContentNode;
+            // contentItem.position = cc.v3(pos);
+            // let uuid = contentItem.getComponent(BaseOnceNode).getUuid();
+            // this.NodeList[uuid] = contentItem;
+            // this.addEvent(contentItem);
+
+            this.TypeListNode.position = cc.v3(pos);
+            this.TypeListNode.active = true;
+        }
+    }
+
+    showBaseContent(event) {
+        let pos = event.getLocation();
+        pos = this.ContentNode.convertToNodeSpaceAR(pos);
+        let contentItem = cc.instantiate(this.ContentPrefab);
+        contentItem.parent = this.ContentNode;
+        contentItem.position = cc.v3(pos);
+        let uuid = contentItem.getComponent(BaseOnceNode).getUuid();
+        this.NodeList[uuid] = contentItem;
+        this.addEvent(contentItem);
+    }
+
+    showDelayContent(event) {
+        let pos = event.getLocation();
+        pos = this.ContentNode.convertToNodeSpaceAR(pos);
+        let contentItem = cc.instantiate(this.DelayPrefab);
+        contentItem.parent = this.ContentNode;
+        contentItem.position = cc.v3(pos);
+        let uuid = contentItem.getComponent(BaseOnceNode).getUuid();
+        this.NodeList[uuid] = contentItem;
+        this.addEvent(contentItem);
+    }
+
+    showCallContent(event) {
+        let pos = event.getLocation();
+        pos = this.ContentNode.convertToNodeSpaceAR(pos);
+        let contentItem = cc.instantiate(this.CallPrefab);
+        contentItem.parent = this.ContentNode;
+        contentItem.position = cc.v3(pos);
+        let uuid = contentItem.getComponent(BaseOnceNode).getUuid();
+        this.NodeList[uuid] = contentItem;
+        this.addEvent(contentItem);
+    }
+
+    onClickTypeList(event, type) {
+        this.TypeListNode.active = false;
+        switch (type) {
+            case 'parallel':
+                this.showBaseContent(event);
+                break;
+            case 'delay':
+                this.showDelayContent(event);
+                break;
+            case 'call':
+                this.showCallContent(event);
+                break;
         }
     }
 
@@ -337,7 +457,7 @@ export default class Helloworld extends cc.Component {
      * @param event 
      */
     touchMove(event: cc.Event.EventTouch) {
-        this.TweenListNode.active = false;
+        this.TypeListNode.active = false;
         this.EasingListNode.active = false;
         event.stopPropagation();
         let x = event.getDeltaX() * Global.zoomRatio;

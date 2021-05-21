@@ -18,12 +18,29 @@ export default class PointManager extends cc.Component {
         this.node.on("updatePos", this.updatePos, this);
         this.node.on("updatePosMove", this.updatePosMove, this);
         this.node.on("LineUnbind", this.unBindLine, this);
+        this.node.on('destroy', this.pointDestroy, this);
+    }
+
+    /**删除 */
+    pointDestroy(e) {
+        let { uuid, from_uuid, pos } = e.getUserData();
+        // this.unBindLine(e);
+        this.pointInfo[uuid] = null;
+        delete this.pointInfo[uuid];
+
+        let arr = [];
+        this.bindInfo.forEach((item) => {
+            if (item.uuid_from !== uuid && item.uuid_to !== uuid) {
+                arr.push(item);
+            }
+        });
+        this.bindInfo = arr;
     }
 
     /**解除绑定 */
     unBindLine(e) {
-        //目标节点的uuid, 
-        let { uuid, from_uuid, pos } = e.getUserData();
+        //目标节点的uuid,
+        let { uuid, from_uuid, to_uuid, pos } = e.getUserData();
         //判断是否在某个区域内
         let { flag, type, tarPos, tarUuid } = this.isContains(from_uuid, pos);
         let uuid_to;
@@ -41,7 +58,7 @@ export default class PointManager extends cc.Component {
             tarPos = this.ContentNode.convertToNodeSpaceAR(tarPos);
         } else {
             if (type) {
-                tarPos = this.pointInfo[uuid].fromPos;
+                tarPos = this.pointInfo[uuid]?.fromPos;
                 tarPos = this.ContentNode.convertToNodeSpaceAR(tarPos);
             } else {
                 // this.unBindAll(uuid, null);
@@ -124,22 +141,17 @@ export default class PointManager extends cc.Component {
 
     updatePos(e) {
         let { uuid, toPos, fromPos } = e.getUserData();
-        // if (toPos) {
-        //     cc.log("to:", toPos.x, toPos.y);
-        // }
-        // if (fromPos) {
-        //     cc.log("from:", fromPos.x, fromPos.y);
-        // }
+       
         this.pointInfo[uuid] = {
             uuid, toPos, fromPos
         }
 
-        /**更新链接 */
+        /** 更新链接 */
         for (let i = 0; i < this.bindInfo.length; i++) {
             const info = this.bindInfo[i];
             if (info.uuid_to === uuid) {
                 let pos1 = this.ContentNode.convertToNodeSpaceAR(toPos);
-                let pos2 = this.pointInfo[info.uuid_from].fromPos; //获取另一个点的位置并更新
+                let pos2 = this.pointInfo[info.uuid_from]?.fromPos; //获取另一个点的位置并更新
                 pos2 = this.ContentNode.convertToNodeSpaceAR(pos2);
 
                 let data = {
@@ -149,7 +161,7 @@ export default class PointManager extends cc.Component {
             }
 
             if (info.uuid_from === uuid) {
-                let pos1 = this.pointInfo[info.uuid_to].toPos;
+                let pos1 = this.pointInfo[info.uuid_to]?.toPos;
                 pos1 = this.ContentNode.convertToNodeSpaceAR(pos1);
                 let pos2 = this.ContentNode.convertToNodeSpaceAR(fromPos);
                 let data = {

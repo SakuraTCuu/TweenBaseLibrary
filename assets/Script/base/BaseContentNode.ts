@@ -79,7 +79,7 @@ export default class BaseContentNode extends BaseOnceNode {
         }
 
         this.time = time;
-        cc.log(this.time);
+        // cc.log(this.time);
         if (resultTween.length === 1) {
             newTween.then(resultTween[0]);
         } else if (resultTween.length > 1) {

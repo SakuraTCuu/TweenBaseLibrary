@@ -20,7 +20,6 @@ export default class LineManager extends cc.Component {
     LinePrefab: cc.Prefab = null;
 
     LineNodeListInfo: cc.Node[] = [];
-    bindInfo = [];
 
     onLoad() {
         this.node.on("LineCreate", this.createLine, this);
@@ -28,6 +27,27 @@ export default class LineManager extends cc.Component {
         this.node.on("LineEnd2", this.endLine, this);
         this.node.on("updateLine", this.updateLine, this);
         this.node.on("LineUnbind2", this.unBindLine, this);
+        this.node.on('destroy', this.LineDestroy, this);
+    }
+
+    /**删除 */
+    LineDestroy(e) {
+        let { uuid, to_uuid, from_uuid } = e.getUserData();
+        // e = e.getUserData();
+        // e.tarUuid = e.uuid;
+        this.LineNodeListInfo[uuid]?.getComponent(Line).clear();
+        this.LineNodeListInfo[uuid]?.destroy();
+        this.LineNodeListInfo[uuid] = null;
+        delete this.LineNodeListInfo[uuid];
+
+        this.LineNodeListInfo[from_uuid]?.getComponent(Line).clear();
+        this.LineNodeListInfo[from_uuid]?.destroy();
+        this.LineNodeListInfo[from_uuid] = null;
+        delete this.LineNodeListInfo[from_uuid];
+
+        // this.scheduleOnce(() => {
+        //     this.unBindLine(e);
+        // }, 0.017)
     }
 
     createLine(e) {
@@ -43,7 +63,7 @@ export default class LineManager extends cc.Component {
     moveLine(e) {
         let { uuid, pos } = e.getUserData();
         pos = this.ContentNode.convertToNodeSpaceAR(pos);
-        this.LineNodeListInfo[uuid].getComponent(Line).touchMove(pos);
+        this.LineNodeListInfo[uuid]?.getComponent(Line).touchMove(pos);
     }
 
     /**TODO 处理循环引用 */
@@ -51,9 +71,9 @@ export default class LineManager extends cc.Component {
         let { uuid, flag, tarPos, tarUuid } = e;
         if (flag) {
             /**更新线段 */
-            this.LineNodeListInfo[uuid].getComponent(Line).touchEnd(flag, tarPos);
+            this.LineNodeListInfo[uuid]?.getComponent(Line).touchEnd(flag, tarPos);
         } else {
-            this.LineNodeListInfo[uuid].getComponent(Line).clear();
+            this.LineNodeListInfo[uuid]?.getComponent(Line).clear();
             this.LineNodeListInfo[uuid] = null;
             delete this.LineNodeListInfo[uuid];
         }
@@ -62,8 +82,8 @@ export default class LineManager extends cc.Component {
     updateLine(e) {
         let { uuid, pos1, pos2 } = e;
 
-        this.LineNodeListInfo[uuid].getComponent(Line).touchStart(pos1);
-        this.LineNodeListInfo[uuid].getComponent(Line).touchEnd(true, pos2);
+        this.LineNodeListInfo[uuid]?.getComponent(Line).touchStart(pos1);
+        this.LineNodeListInfo[uuid]?.getComponent(Line).touchEnd(true, pos2);
     }
 
     /**解除绑定 */
@@ -71,15 +91,19 @@ export default class LineManager extends cc.Component {
         //目标节点的uuid, 
         let { tarUuid, from_uuid, type, flag, tarPos } = e;
 
+        // if(!from_uuid || ! tarUuid){
+
+        // }
+
         if (flag) {
             /**更新线段 */
-            this.LineNodeListInfo[from_uuid].getComponent(Line).touchEnd(flag, tarPos);
+            this.LineNodeListInfo[from_uuid]?.getComponent(Line).touchEnd(flag, tarPos);
         } else {
             if (type) {
                 //返回原位置
-                this.LineNodeListInfo[from_uuid].getComponent(Line).touchEnd(1, tarPos);
+                this.LineNodeListInfo[from_uuid]?.getComponent(Line).touchEnd(1, tarPos);
             } else {
-                this.LineNodeListInfo[tarUuid].getComponent(Line).clear();
+                this.LineNodeListInfo[tarUuid]?.getComponent(Line).clear();
                 this.LineNodeListInfo[tarUuid] = null;
                 delete this.LineNodeListInfo[tarUuid];
             }
