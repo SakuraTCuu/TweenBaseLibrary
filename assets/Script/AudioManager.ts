@@ -1,77 +1,3 @@
-// export default class AudioManager {
-
-//     private static _isPlaying = false;
-//     private static _currentCall = null;
-//     private static _currentAudioId = null;
-//     private static playList: Array<cc.AudioClip> = new Array();
-
-//     execLogic() {
-//         let thread = this.playList[0];
-//         if (thread.isPlaying) {
-//             return;
-//         }
-//         // thread.play();
-//     }
-//     /**
-//      * 播放 题目/对话/结束/引导/... 语音
-//      * @param audio 
-//      * @param cb 
-//      * @param isCover 如果有新音频播放,当前音频是否被覆盖  默认 true
-//      * @param isLoop  是否循环  默认 false
-//      * @param volume  音量大小  默认 1
-//      * @returns 
-//      */
-//     public static playVoice(audio: cc.AudioClip, cb?) {
-//         if (!audio) {
-//             return cb && cb();
-//         }
-//         if (!(audio instanceof cc.AudioClip)) {
-//             // audio = cc.aha.Resource.voice(residOrAudioClip);
-//             if (!audio) {
-//                 return cc.log("wrong type!")
-//             }
-//         }
-
-//         if (this._isPlaying) {
-//             this._currentCall && this._currentCall();
-//             this.stopAudio(this._currentAudioId);
-//         }
-
-//         this._isPlaying = true;
-
-//         let callback = () => {
-//             this._isPlaying = false;
-//             cb && cb();
-//         }
-
-//         let audioId = this.playAudio(audio, callback);
-
-//         this._currentCall = callback;
-//         this._currentAudioId = audioId;
-//     }
-
-//     private static stopAudio(audioId) {
-//         cc.audioEngine.stop(audioId);
-//     }
-
-//     private static playAudio(audio, cb?, isLoop?, volume?) {
-//         volume = volume || 1;
-//         let audioId = cc.audioEngine.play(audio, isLoop, volume);
-//         cc.audioEngine.setFinishCallback(audioId, cb);
-//         return audioId;
-//     }
-
-//     /**播放特效*/
-//     public static playSFX(audio, volume) {
-//         this.playAudio(audio, null, false, volume);
-//     }
-
-//     /**播放背景音乐 */
-//     public static playBGM(audio, volume) {
-//         this.playAudio(audio, null, true, volume);
-//     }
-// }
-
 /**
  * TODO 
  *  需要处理多个相同的音效调用, 应该不中断当前,而是不播放传入的
@@ -124,8 +50,6 @@ export default class AudioMgr {
 
     /**
      * 
-     * 排队? 插队? 覆盖
-     * 
      * 播放 题目/对话/结束/引导/... 语音
      * @param audio 
      * @param cb 
@@ -157,7 +81,6 @@ export default class AudioMgr {
 
     /**播放特效*/
     public static playSFX(audio, volume?, isLoop?) {
-        // isL
         let thread = new Thread(audio, this.update, false, volume);
         let audioId = thread.play();
         this.ThreadData[audioId] = thread;

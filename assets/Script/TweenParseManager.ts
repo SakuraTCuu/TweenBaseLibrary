@@ -46,6 +46,7 @@ class customTween {
 
     callBack(name: string) {
         // this._target[name];
+        cc.log(name);
         this._event[name] && this._event[name]();
         return this;
     }

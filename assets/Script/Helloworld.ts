@@ -55,6 +55,8 @@ export default class Helloworld extends cc.Component {
     audio1: cc.AudioClip = null;
     @property(cc.AudioClip)
     audio2: cc.AudioClip = null;
+    @property(cc.AudioClip)
+    audio3: cc.AudioClip = null;
 
     zIndex = 0;
     clickPos: cc.Vec3 = cc.v3();
@@ -65,7 +67,75 @@ export default class Helloworld extends cc.Component {
     onLoad() {
         this.initView();
         this.initEvent();
+        /** 
+         * 特性1:
+         *      重复或多个语音同时播放,stop之前的,播放最近play的
+         *      背景音/特效音 不在控制范围内
+         * 特性2:
+         *      stop 必会触发回调
+         */
+        ((Ae) => {
+            let play = Ae.play;
+            /**
+             * 
+             * @param clip 音源
+             * @param loop 循环
+             * @param volume 音量
+             * @param isEffect 是否是特效音
+             * @returns audioId
+             */
+            Ae.play = function (clip, loop, volume, isEffect?) {
+                let audioList = Ae['_id2audio'];
+                for (const key in audioList) {
+                    if (Object.prototype.hasOwnProperty.call(audioList, key)) {
+                        const audio = audioList[key];
+                        if (audio._state === Ae.AudioState.PLAYING) {
+                            if (!(audio._element.loop) && audio['voice'] && !isEffect) { /**是否循环 */
+                                audio['voice'] = false;
+                                audio.stop();
+                            }
+                        }
+                    }
+                }
+                let audio = play(clip, loop, volume);
+                if (!isEffect) {
+                    Ae['_id2audio'][audio]['voice'] = true;
+                }
+                return audio;
+            }
+
+            /**
+             * @param audioID  音源Id
+             * @returns 
+             */
+            Ae.stop = function (audioID) {
+                let audio = Ae['_id2audio'][audioID];
+                if (audio) {
+                    if (audio._finishCallback) {
+                        audio._finishCallback();
+                    }
+                    audio.stop();
+                    return true;
+                }
+                return false;
+            }
+        })(cc.audioEngine)
+        // let audioId;
+        // // audioId = cc.audioEngine.play(this.audio1, true, 1);
+        // // cc.audioEngine.setFinishCallback(audioId, () => {
+        // //     cc.log("callback");
+        // // })
+        // // cc.log(cc.audioEngine['_id2audio'][audioId]);
+        // this.scheduleOnce(() => {
+        //     // cc.audioEngine.stop(audioId);
+        // }, 0.5);
+
+        // cc.test = (index, test) => {
+        //     let name = 'audio' + index;
+        //     cc.audioEngine.play(this[name], false, 1, test);
+        // }
     }
+
 
     start() {
         this.EasingListNode.zIndex = 999;
@@ -246,8 +316,8 @@ export default class Helloworld extends cc.Component {
                 /** 重置 */
                 this.resetTween();
             })
-            // .repeatForever(tweenData) /**重复执行 */
-            .start();
+        // .repeatForever(tweenData) /**重复执行 */
+        // .start();
         /**延后解析数据 */
         setTimeout(() => {
             let data = this.parseExportData();
@@ -260,12 +330,12 @@ export default class Helloworld extends cc.Component {
                     /** 重置 */
                     this.resetTween();
                 })
-            // .start();
+                .start();
         })
     }
 
     frameCallBack(key) { }
-    test() { cc.log(this.MainNode); }
+    test() { cc.log('test call'); }
     stop() { }
     resume() { }
 
@@ -324,6 +394,8 @@ export default class Helloworld extends cc.Component {
             }
         }
 
+        Global.zoomRatio = 2 - this.ContentNode.scale;
+
         // this.MainCamera.zoomRatio += 0.05;
         // if (this.MainCamera.zoomRatio > 1.5) {
         //     this.MainCamera.zoomRatio = 1.5;
@@ -338,6 +410,7 @@ export default class Helloworld extends cc.Component {
             this.ContentNode.scale = 0.5;
         }
 
+        Global.zoomRatio = 2 - this.ContentNode.scale;
         /**更新 */
         for (const key in this.NodeList) {
             if (Object.prototype.hasOwnProperty.call(this.NodeList, key)) {
@@ -394,7 +467,7 @@ export default class Helloworld extends cc.Component {
             // let uuid = contentItem.getComponent(BaseOnceNode).getUuid();
             // this.NodeList[uuid] = contentItem;
             // this.addEvent(contentItem);
-
+            this.TypeListNode.scale = Global.zoomRatio;
             this.TypeListNode.position = cc.v3(pos);
             this.TypeListNode.active = true;
         }

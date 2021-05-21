@@ -86,8 +86,11 @@ export default class BaseOnceNode extends BaseNode {
     }
 
     updateView() {
-        this.LineTo && (this.LineTo.color = this.node.color);
-        this.LineFrom && (this.LineFrom.color = this.node.color);
+        // this.LineTo && (this.LineTo.color = this.node.color);
+        // this.LineFrom && (this.LineFrom.color = this.node.color);
+        this.LineTo && (this.LineTo.color = cc.color('#00e42d'));
+        this.LineFrom && (this.LineFrom.color = cc.color('#00e42d'));
+
         // this.Effect && (this.Effect.node.color = cc.Color.WHITE);
     }
 
