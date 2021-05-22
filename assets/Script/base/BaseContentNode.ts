@@ -52,6 +52,10 @@ export default class BaseContentNode extends BaseOnceNode {
         this.TweenListNode.active = false;
     }
 
+    protected changeCallbackName(editbox: cc.EditBox) {
+        this._exportData['callbackName'] = editbox.string;
+    }
+
     changeData(e) {
         let { uuid, tween, tweenData } = e.getUserData();
 

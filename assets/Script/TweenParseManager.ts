@@ -27,6 +27,39 @@ export default class TweenParseManager {
     //     TweenParseManager._data = value;
     // }
 
+    public static getTweenByData1(data, context) {
+        if (!data || data.length <= 0) {
+            return cc.error("Invalid data");
+        }
+
+        cc.log(data);
+        let baseTween = cc.tween();
+        for (let i = 0; i < data.length; i++) {
+            const tweenInfo = data[i];
+            let type = tweenInfo.tweenType;
+            let actionList: Array<actionBean> = tweenInfo.data;
+            let repeatTime = tweenInfo.repeatTime;
+            if (type === TweenType.PARALLEL) {
+                let resultTween = [];
+                for (let i = 0; i < actionList.length; i++) {
+                    const action = actionList[i];
+                    /**解析actionBean */
+                    let tween = this.getOnceAction(action);
+                    resultTween.push(tween);
+                }
+                if (resultTween.length >= 2) {
+                    // @ts-ignore
+                    baseTween = baseTween.parallel(...resultTween);
+                } else {
+                    baseTween = baseTween.then(resultTween[0]);
+                }
+                baseTween.union().repeat(repeatTime);
+                if(typeof context[tweenInfo.callbackName] === 'function') baseTween.call(context[tweenInfo.callbackName]);
+            }
+        }
+        return baseTween;
+    }
+
     /**解析data */
     public static getTweenByData(data) {
         // data = data || this.data;
