@@ -21,7 +21,6 @@ class customTween {
     _event: {} = {};
     _target: any = null;
     constructor(tween: cc.Tween) {
-        new Array().concat
         this._tween = tween;
     }
 
